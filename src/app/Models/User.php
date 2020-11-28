@@ -17,9 +17,12 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
+        'uuid',
         'name',
         'email',
+        'email_verified_at',
         'password',
+        'role',
     ];
 
     /**
@@ -28,6 +31,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
+        'id',
         'password',
         'remember_token',
     ];
@@ -40,4 +44,14 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function requests()
+    {
+        return $this->hasMany(UserRequest::class, 'user_uuid', 'uuid');
+    }
+
+    public function evaluatedRequests()
+    {
+        return $this->hasMany(UserRequest::class, 'evaluated_by', 'uuid');
+    }
 }

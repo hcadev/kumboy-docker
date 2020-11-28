@@ -2,7 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,6 +16,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        // insert super admin account
+        User::query()
+            ->create([
+                'uuid' => (string) Str::orderedUuid(),
+                'name' => env('SUPERADMIN_NAME'),
+                'email' => env('SUPERADMIN_EMAIL'),
+                'email_verified_at' => now(),
+                'password' => Hash::make(env('SUPERADMIN_PASSWORD')),
+                'role' => 'superadmin',
+            ]);
     }
 }
