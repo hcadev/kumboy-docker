@@ -27,7 +27,7 @@
     <title>@yield('page-title')</title>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-secondary sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{{ route('home') }}">Kumboy</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-toggled" aria-controls="navbar-toggled" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,21 +53,21 @@
                     @endguest
 
                     @auth
-                        @can('viewAllUsers', new \App\Models\User())
+                        @can('viewAll', new \App\Models\User())
                             <li class="nav-item">
-                                <a class="nav-link" href="#">Users</a>
+                                <a class="nav-link" href="{{ route('user.view-all') }}">Users</a>
                             </li>
                         @endcan
-                        @can('viewAllRequests', new \App\Models\UserRequest())
+                        @can('viewAllRequests', new \App\Models\StoreRequest())
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('request.view-all', [1, 25]) }}">Requests <span class="badge rounded-pill bg-primary" id="pending-request-count"></span></a>
+                                <a class="nav-link" href="{{ route('request.view-all') }}">Requests <span class="badge rounded-pill bg-primary" id="pending-request-count"></span></a>
                             </li>
                         @endcan
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('user.notifications', [Auth::user()->uuid, 1, 25]) }}">Notifications <span class="badge rounded-pill bg-primary" id="notification-count"></span></a>
+                            <a class="nav-link" href="{{ route('user.notifications', Auth::user()->uuid) }}">Notifications <span class="badge rounded-pill bg-primary" id="notification-count"></span></a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('user.activity-log', [Auth::user()->uuid, 1, 25]) }}">{{ Auth::user()->name }}</a>
+                            <a class="nav-link" href="{{ route('user.activity-log', Auth::user()->uuid) }}">{{ Auth::user()->name }}</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('logout') }}">Logout</a>
@@ -86,6 +86,7 @@
 {{-- Check for pending requests and notifications every 5 seconds --}}
 <script>
     var role = '{{ Auth::check() ? Auth::user()->role : '' }}';
+    var logged_in = '{{ Auth::check() }}';
     count();
 
     setInterval(function () {
@@ -93,7 +94,7 @@
     }, 5000);
 
     function count() {
-        if (role.match('/admin/i')) {
+        if (role.match('admin')) {
             axios.get('{{ route('request.count-pending') }}')
                 .then(function (response) {
                     var pending = parseInt(response.data);
@@ -101,11 +102,13 @@
                 });
         }
 
-        axios.get('{{ route('notification.count-unread') }}')
-            .then(function (response) {
-                var unread = parseInt(response.data);
-                document.getElementById('notification-count').innerText = unread > 0 ? unread : '';
-            });
+        if (logged_in) {
+            axios.get('{{ route('notification.count-unread') }}')
+                .then(function (response) {
+                    var unread = parseInt(response.data);
+                    document.getElementById('notification-count').innerText = unread > 0 ? unread : '';
+                });
+        }
     }
 </script>
 </body>

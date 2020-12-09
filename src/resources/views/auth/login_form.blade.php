@@ -1,4 +1,4 @@
-@extends('layouts.clean')
+@extends('layouts.app')
 @section('page-title', 'Login')
 
 @section('content')
@@ -7,7 +7,7 @@
             <div class="col-md-6 offset-md-3">
                 <div class="card mt-5">
                     <div class="card-title">
-                        <h3 class="text-center py-3">Login</h3>
+                        <h4 class="text-center py-3">Login</h4>
                     </div>
                     <div class="card-body">
                         @if (session('messageType'))

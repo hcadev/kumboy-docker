@@ -7,7 +7,7 @@
             <div class="col-md-6 offset-md-3">
                 <div class="card mt-5">
                     <div class="card-title">
-                        <h3 class="text-center py-3">Registration</h3>
+                        <h4 class="text-center py-3">Registration</h4>
                     </div>
                     <div class="card-body">
                         @if (session('messageContent'))
@@ -71,29 +71,30 @@
         document.getElementById('send-code').addEventListener('click', function (e) {
             e.preventDefault();
 
+            // disable button for 60 seconds
+            var btn = document.getElementById('send-code');
+            btn.disabled = true;
+
+            var ctr = 60;
+            timer();
+
+            function timer() {
+                setTimeout(function () {
+                    if (ctr === 1) {
+                        btn.disabled = false;
+                        btn.innerHTML = 'Send Code';
+                    } else if (ctr > 1) {
+                        ctr--;
+                        btn.innerHTML = 'Resend in ' + ctr;
+                        timer();
+                    }
+                }, 1000);
+            }
+
             axios.post('http://localhost:8080/users/send-email-verification-code', {
                     email: document.getElementById('email').value
                 })
                 .then(function (response) {
-                    // disable button for 60 seconds
-                    var btn = document.getElementById('send-code');
-                    btn.disabled = true;
-
-                    var ctr = 60;
-                    timer();
-
-                    function timer() {
-                        setTimeout(function () {
-                            if (ctr === 1) {
-                                btn.disabled = false;
-                                btn.innerHTML = 'Send Code';
-                            } else if (ctr > 1) {
-                                ctr--;
-                                btn.innerHTML = 'Resend in ' + ctr;
-                                timer();
-                            }
-                        }, 1000);
-                    }
                 })
                 .catch(function (error) {
                     if (error.response.status === 400) {

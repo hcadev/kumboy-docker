@@ -10,17 +10,17 @@ use App\Traits\Validation\HasUserAddressValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class AddressBookController extends BaseController
+class AddressBookController extends ProfileController
 {
     use HasUserAddressValidation;
 
-    public function showAddressBook($userUuid, UserAddressBook $userAddressBookModel)
+    public function showAddressBook($userUuid)
     {
         $this->authorize('viewAddressBook', [new UserAddressBook(), $userUuid]);
 
         $this->profile->with('content', 'users.profile.address_book.index');
 
-        $userAddressBook = $userAddressBookModel->newQuery()
+        $userAddressBook = UserAddressBook::query()
             ->where('user_uuid', $userUuid)
             ->get();
 
@@ -30,7 +30,6 @@ class AddressBookController extends BaseController
 
     public function showAddAddressForm($userUuid)
     {
-        // pass an instance of UserAddressBook to indicate that UserAddressBookPolicy will be used
         $this->authorize('addAddress', [new UserAddressBook(), $userUuid]);
 
         return $this->profile
@@ -40,7 +39,7 @@ class AddressBookController extends BaseController
             ]);
     }
 
-    public function addAddress($userUuid, Request $request, UserAddressBook $userAddressBookModel, MapService $mapService)
+    public function addAddress($userUuid, Request $request, MapService $mapService)
     {
         $this->authorize('addAddress', [new UserAddressBook(), $userUuid]);
 
@@ -51,7 +50,7 @@ class AddressBookController extends BaseController
             $this->beginTransaction();
 
             if ($mapService->isValidAddress($validatedData['map_coordinates'], $validatedData['map_address'])) {
-                $userAddress = $userAddressBookModel->newQuery()
+                $userAddress = UserAddressBook::query()
                     ->create($validatedData);
 
                 event(new UserAddAddress($userAddress));
@@ -75,9 +74,9 @@ class AddressBookController extends BaseController
         }
     }
 
-    public function showEditAddressForm($userUuid, $addressID, UserAddressBook $userAddressBookModel)
+    public function showEditAddressForm($userUuid, $addressID)
     {
-        $userAddress = $userAddressBookModel->newQuery()
+        $userAddress = UserAddressBook::query()
             ->find($addressID);
 
         if ($userAddress === null) {
@@ -93,14 +92,9 @@ class AddressBookController extends BaseController
             ]);
     }
 
-    public function editAddress(
-        $userUuid,
-        $addressID,
-        Request $request,
-        UserAddressBook $userAddressBookModel,
-        MapService $mapService
-    ) {
-        $userAddress = $userAddressBookModel->newQuery()
+    public function editAddress($userUuid, $addressID, Request $request, MapService $mapService)
+    {
+        $userAddress = UserAddressBook::query()
             ->find($addressID);
 
         if ($userAddress === null) {
@@ -146,9 +140,9 @@ class AddressBookController extends BaseController
         }
     }
 
-    public function showDeleteAddressDialog($userUuid, $addressID, UserAddressBook $userAddressBookModel)
+    public function showDeleteAddressDialog($userUuid, $addressID)
     {
-        $address = $userAddressBookModel->newQuery()
+        $address = UserAddressBook::query()
             ->find($addressID);
 
         if ($address === null) {
@@ -164,9 +158,9 @@ class AddressBookController extends BaseController
             ]);
     }
 
-    public function deleteAddress($userUuid, $addressID, UserAddressBook $userAddressBookModel)
+    public function deleteAddress($userUuid, $addressID)
     {
-        $userAddress = $userAddressBookModel->newQuery()
+        $userAddress = UserAddressBook::query()
             ->find($addressID);
 
         if ($userAddress === null) {

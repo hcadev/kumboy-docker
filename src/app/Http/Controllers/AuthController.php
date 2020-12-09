@@ -16,12 +16,12 @@ class AuthController extends DatabaseController
         return view('auth.login_form');
     }
 
-    public function login(Request $request, User $userModel)
+    public function login(Request $request)
     {
         try {
             $this->beginTransaction();
 
-            $user = $userModel->newQuery()
+            $user = User::query()
                 ->where('email', $request->get('email'))
                 ->first();
 

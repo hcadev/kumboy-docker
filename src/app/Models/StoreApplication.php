@@ -10,10 +10,10 @@ class StoreApplication extends Model
 {
     use HasFactory, WithoutTimestamps;
 
-    protected $table = 'user_request_store_applications';
+    protected $table = 'store_application_requests';
 
     protected $fillable = [
-        'user_request_code',
+        'request_code',
         'uuid',
         'name',
         'contact_number',
@@ -24,8 +24,12 @@ class StoreApplication extends Model
         'attachment',
     ];
 
-    public function userRequest()
+    protected $casts = [
+        'open_until' => 'datetime:Y-m-d',
+    ];
+
+    public function storeRequest()
     {
-        return $this->belongsTo(UserRequest::class);
+        return $this->belongsTo(StoreRequest::class);
     }
 }

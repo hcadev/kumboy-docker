@@ -3,10 +3,11 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Profile\Store\ProductController as StoreProductController;
 use App\Http\Controllers\Profile\User\ActivityController as UserActivityController;
 use App\Http\Controllers\Profile\User\AddressBookController as UserAddressBookController;
 use App\Http\Controllers\Profile\User\NotificationController as UserNotificationController;
-use App\Http\Controllers\Profile\User\RequestController as UserRequestController;
+use App\Http\Controllers\Profile\User\StoreRequestController as UserStoreRequestController;
 use App\Http\Controllers\Profile\User\StoreController as UserStoreController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\UserController;
@@ -49,11 +50,19 @@ Route::prefix('users')->group(function () {
         ->name('user.register');
     Route::post('register', [UserController::class, 'register']);
     Route::post('send-email-verification-code', [UserController::class, 'sendEmailVerificationCode']);
+    Route::post('search', [UserController::class, 'search'])
+        ->name('user.search');
+    Route::get('view-all/{currentPage?}/{itemsPerPage?}/{keyword?}', [UserController::class, 'viewAll'])
+        ->name('user.view-all');
+    Route::post('find-email', [UserController::class, 'findByEmail'])
+        ->name('user.find-email');
 
     // profile
     Route::middleware('auth')->prefix('{uuid}')->group(function () {
         // activity log
-        Route::get('{currentPage}/{itemsPerPage}', [UserActivityController::class, 'viewActivities'])
+        Route::post('activities/search', [UserActivityController::class, 'searchActivity'])
+            ->name('user.search-activity');
+        Route::get('activities/{currentPage?}/{itemsPerPage?}/{keyword?}', [UserActivityController::class, 'viewActivities'])
             ->name('user.activity-log');
 
         // account settings
@@ -81,26 +90,49 @@ Route::prefix('users')->group(function () {
         // store
         Route::get('stores', [UserStoreController::class, 'showStores'])
             ->name('user.stores');
-
-        // user requests
-        Route::get('requests/{currentPage}/{itemsPerPage}', [UserRequestController::class, 'viewRequests'])
-            ->name('user.requests');
-        Route::get('request-details/{code}', [UserRequestController::class, 'viewRequestDetails'])
-            ->name('user.request-details');
-        Route::post('cancel-request/{code}', [UserRequestController::class, 'cancelRequest'])
-            ->name('user.cancel-request');
-        Route::post('approve-request/{code}', [UserRequestController::class, 'approveRequest'])
-            ->name('user.approve-request');
-        Route::post('reject-request/{code}', [UserRequestController::class, 'rejectRequest'])
-            ->name('user.reject-request');
-        Route::get('add-store', [UserRequestController::class, 'showAddStoreForm'])
+        Route::get('stores/add', [UserStoreRequestController::class, 'showAddStoreForm'])
             ->name('user.add-store');
-        Route::post('add-store', [UserRequestController::class, 'createStoreApplication']);
+        Route::post('stores/add', [UserStoreRequestController::class, 'createStoreApplication']);
+        Route::get('stores/{store}/edit', [UserStoreRequestController::class, 'showEditStoreForm'])
+            ->name('user.edit-store');
+        Route::post('stores/{store}/edit', [UserStoreRequestController::class, 'createStoreApplication']);
+        Route::get('stores/{store}/transfer', [UserStoreRequestController::class, 'showTransferStoreForm'])
+            ->name('user.transfer-store');
+        Route::post('stores/{store}/transfer', [UserStoreRequestController::class, 'createStoreTransfer']);
+
+        Route::prefix('stores/requests')->group(function () {
+            Route::post('search', [UserStoreRequestController::class, 'searchRequest'])
+                ->name('user.search-store-request');
+            Route::get('{currentPage?}/{itemsPerPage?}/{keyword?}', [UserStoreRequestController::class, 'viewRequests'])
+                ->name('user.store-requests');
+            Route::get('{code}/view', [UserStoreRequestController::class, 'viewRequestDetails'])
+                ->name('user.store-request-details');
+            Route::post('{code}/cancel', [UserStoreRequestController::class, 'cancelRequest'])
+                ->name('user.cancel-store-request');
+            Route::post('{code}/approve', [UserStoreRequestController::class, 'approveRequest'])
+                ->name('user.approve-store-request');
+            Route::post('reject-request/{code}', [UserStoreRequestController::class, 'rejectRequest'])
+                ->name('user.reject-store-request');
+        });
 
         // notifications
-        Route::get('notifications/{currentPage}/{itemsPerPage}', [UserNotificationController::class, 'viewAll'])
+        Route::post('notifications/search', [UserNotificationController::class, 'searchNotification'])
+            ->name('user.search-notification');
+        Route::get('notifications/{currentPage?}/{itemsPerPage?}/{keyword?}', [UserNotificationController::class, 'viewAll'])
             ->name('user.notifications');
+        Route::get('notifications/{notification}/read', [UserNotificationController::class, 'readNotification'])
+            ->name('user.read-notification');
+        Route::get('notifications/{notification}/view', [UserNotificationController::class, 'viewNotification'])
+            ->name('user.view-notification');
     });
+});
+
+/*
+ * Store Route Group
+ */
+Route::prefix('stores/{uuid}')->group(function () {
+    Route::get('products/{currentPage?}/{itemPerPage?}/{keyword?}', [StoreProductController::class, 'viewStoreProducts'])
+        ->name('store.products');
 });
 
 /*
@@ -111,7 +143,7 @@ Route::middleware('auth')->prefix('requests')->group(function () {
         ->name('request.count-pending');
     Route::post('search', [RequestController::class, 'search'])
         ->name('request.search');
-    Route::get('{currentPage}/{itemsPerPage}/{keyword?}', [RequestController::class, 'viewAll'])
+    Route::get('{currentPage?}/{itemsPerPage?}/{keyword?}', [RequestController::class, 'viewAll'])
         ->name('request.view-all');
 });
 

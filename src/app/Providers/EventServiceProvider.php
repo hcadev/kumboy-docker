@@ -5,7 +5,7 @@ namespace App\Providers;
 use App\Events\ApproveStoreApplication;
 use App\Events\CancelStoreApplication;
 use App\Events\RejectStoreApplication;
-use App\Events\UserRequestCreate;
+use App\Events\StoreRequestCreate;
 use App\Events\UserAddAddress;
 use App\Events\UserChangeName;
 use App\Events\UserChangePassword;
@@ -13,13 +13,13 @@ use App\Events\UserDeleteAddress;
 use App\Events\UserEditAddress;
 use App\Events\UserLogin;
 use App\Events\UserLogout;
-use App\Events\UserRequestApprove;
-use App\Events\UserRequestCancel;
-use App\Events\UserRequestReject;
+use App\Events\StoreRequestApprove;
+use App\Events\StoreRequestCancel;
+use App\Events\StoreRequestReject;
 use App\Listeners\LogApproveStoreApplication;
 use App\Listeners\LogCancelStoreApplication;
 use App\Listeners\LogRejectStoreApplication;
-use App\Listeners\LogUserRequestCreate;
+use App\Listeners\LogStoreRequestCreate;
 use App\Listeners\LogUserAddAddress;
 use App\Listeners\LogUserChangeName;
 use App\Listeners\LogUserChangePassword;
@@ -27,12 +27,12 @@ use App\Listeners\LogUserDeleteAddress;
 use App\Listeners\LogUserEditAddress;
 use App\Listeners\LogUserLogin;
 use App\Listeners\LogUserLogout;
-use App\Listeners\LogUserRequestApprove;
-use App\Listeners\LogUserRequestCancel;
-use App\Listeners\LogUserRequestReject;
-use App\Listeners\NotifyUserRequestApprove;
-use App\Listeners\NotifyUserRequestCreate;
-use App\Listeners\NotifyUserRequestReject;
+use App\Listeners\LogStoreRequestApprove;
+use App\Listeners\LogStoreRequestCancel;
+use App\Listeners\LogStoreRequestReject;
+use App\Listeners\NotifyStoreRequestApprove;
+use App\Listeners\NotifyStoreRequestCreate;
+use App\Listeners\NotifyStoreRequestReject;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -64,20 +64,20 @@ class EventServiceProvider extends ServiceProvider
         UserDeleteAddress::class => [
             LogUserDeleteAddress::class,
         ],
-        UserRequestCancel::class => [
-            LogUserRequestCancel::class,
+        StoreRequestCancel::class => [
+            LogStoreRequestCancel::class,
         ],
-        UserRequestApprove::class => [
-            LogUserRequestApprove::class,
-            NotifyUserRequestApprove::class,
+        StoreRequestApprove::class => [
+            LogStoreRequestApprove::class,
+            NotifyStoreRequestApprove::class,
         ],
-        UserRequestReject::class => [
-            LogUserRequestReject::class,
-            NotifyUserRequestReject::class,
+        StoreRequestReject::class => [
+            LogStoreRequestReject::class,
+            NotifyStoreRequestReject::class,
         ],
-        UserRequestCreate::class => [
-            LogUserRequestCreate::class,
-            NotifyUserRequestCreate::class,
+        StoreRequestCreate::class => [
+            LogStoreRequestCreate::class,
+            NotifyStoreRequestCreate::class,
         ],
     ];
 

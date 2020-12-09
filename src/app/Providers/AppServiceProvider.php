@@ -2,7 +2,8 @@
 
 namespace App\Providers;
 
-use App\Models\UserRequest;
+use App\Models\Store;
+use App\Models\StoreRequest;
 use App\Models\VerificationCode;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
@@ -45,14 +46,36 @@ class AppServiceProvider extends ServiceProvider
         }, 'Invalid format.');
 
         Validator::extend('store_application', function ($attribute, $value, $parameters, $validator) {
-            $userRequest = UserRequest::query()
+            $storeUuid = $validator->getData()['uuid'] ?? null;
+
+            if ($storeUuid === null) {
+                // check if store name is already taken
+                $store = Store::query()
+                    ->where('name', $value)
+                    ->first();
+
+                if ($store !== null) {
+                    return false;
+                }
+            } else {
+                $store = Store::query()
+                    ->where('uuid', '!=', $storeUuid)
+                    ->where('name', $value)
+                    ->first();
+
+                if ($store !== null) {
+                    return false;
+                }
+            }
+
+            $storeRequest = StoreRequest::query()
                 ->where('status', 'pending')
                 ->whereHas('storeApplication', function ($query) use ($value) {
                     $query->where('name', $value);
                 })
                 ->first();
 
-            return $userRequest === null;
-        }, 'A pending request already exists for this store. ');
+            return $storeRequest === null;
+        }, 'A pending request already exists for this store or the store name is already taken.');
     }
 }

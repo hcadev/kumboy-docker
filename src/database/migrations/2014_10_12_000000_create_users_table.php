@@ -30,7 +30,7 @@ class CreateUsersTable extends Migration
             $table->engine = 'InnoDB';
         });
 
-        DB::statement('ALTER TABLE users ADD FULLTEXT(uuid, name, email)');
+        DB::statement('ALTER TABLE users ADD FULLTEXT(name, email, role)');
     }
 
     /**

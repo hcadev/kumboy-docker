@@ -1,8 +1,8 @@
 @section('page-title', $user->name.' - Add Address')
 
 <div class="row">
-    <div class="col-12 px-3">
-        <h3 class="border-bottom mt-3 py-2">{{ $formTitle }}</h3>
+    <div class="col-12">
+        <h4 class="border-bottom mt-3 py-2">{{ $formTitle }}</h4>
 
         @if (session('messageType'))
             <div class="alert alert-{{ session('messageType') }}">{{ session('messageContent') }}</div>

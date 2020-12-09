@@ -1,24 +1,36 @@
 @section('page-title', $user->name.' - Activity Log')
 
 <div class="row">
-    <div class="col-12 px-3">
-        <h3 class="border-bottom mt-3 pb-2">Activity Log</h3>
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center border-bottom mt-3 mb-1w pb-2">
+            <h4 class="my-0">Activity Log</h4>
+            <form action="{{ route('user.search-activity', $user->uuid) }}" METHOD="POST">
+                @csrf
+                <div class="input-group">
+                    <input type="search" name="keyword" class="form-control form-control-sm" placeholder="Search keyword...">
+                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                </div>
+            </form>
+        </div>
+
         @if ($activities->isEmpty())
             <div class="alert alert-danger">No records found.</div>
         @else
-            <div class="text-secondary mb-2">
-                {{ 'Displaying '.$itemStart.'-'.$itemEnd.' of '.$totalCount.'.' }}
-            </div>
-
             @foreach ($activities AS $activity)
-                <div>{{ $activity->date_recorded.' - '.str_replace('\n', '<br>', $activity->action_taken) }}</div>
+                <p class="mb-1">
+                    <span class="small text-secondary">{{ $activity->date_recorded }}  &#8285;</span>
+                    {{ $activity->action_taken }}
+                </p>
             @endforeach
 
-            @includeWhen($totalPages > 1, 'shared.pagination', [
+            @include('shared.pagination', [
+                'itemStart' => $itemStart,
+                'itemEnd' => $itemEnd,
+                'totalCount' => $totalCount,
                 'currentPage' => $currentPage,
                 'totalPages' => $totalPages,
                 'itemsPerPage' => $itemsPerPage,
-                'url' => 'users/'.$user->uuid,
+                'url' => route('user.activity-log', $user->uuid),
             ])
         @endif
     </div>

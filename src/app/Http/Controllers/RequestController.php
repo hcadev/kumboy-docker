@@ -2,18 +2,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\UserRequest;
+use App\Models\StoreRequest;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 
 class RequestController extends Controller
 {
-    public function countPending(Request $request, UserRequest $userRequestModel)
+    public function countPending(Request $request, StoreRequest $storeRequestModel)
     {
-        $this->authorize('countPendingRequests', new UserRequest());
+        $this->authorize('countPendingRequests', new StoreRequest());
 
         if ($request->wantsJson()) {
-            $count = $userRequestModel->newQuery()
+            $count = StoreRequest::query()
                 ->where('status', 'pending')
                 ->count();
 
@@ -27,42 +27,43 @@ class RequestController extends Controller
             ->route('request.view-all', [1, 25, $request->get('keyword')]);
     }
 
-    public function viewAll(
-        UserRequest $userRequestModel,
-        User $userModel,
-        $currentPage,
-        $itemsPerPage,
-        $keyword = null)
+    public function viewAll($currentPage = 1, $itemsPerPage = 15, $keyword = null)
     {
-        $this->authorize('viewAllRequests', new UserRequest());
+        $this->authorize('viewAllRequests', new StoreRequest());
 
         $offset = ($currentPage - 1) * $itemsPerPage;
 
-        $userRequest = $userRequestModel->newQuery()
-            ->addSelect(['user_name' => $userModel->newQuery()
-                ->whereColumn('uuid', 'user_requests.user_uuid')
+        $storeRequest = StoreRequest::query()
+            ->addSelect(['user_name' => User::query()
+                ->whereColumn('uuid', 'store_requests.user_uuid')
                 ->select('name')
                 ->limit(1)
             ])
-            ->addSelect(['evaluator_name' => $userModel->newQuery()
-                ->whereColumn('uuid', 'user_requests.evaluated_by')
+            ->addSelect(['evaluator_name' => User::query()
+                ->whereColumn('uuid', 'store_requests.evaluated_by')
                 ->select('name')
                 ->limit(1)
             ]);
 
         if (empty($keyword) === false) {
-            $userRequest->whereRaw('MATCH (user_uuid, code) AGAINST(? IN BOOLEAN MODE)', [$keyword.'*']);
+            $storeRequest->whereRaw('MATCH (code, type, status) AGAINST(? IN BOOLEAN MODE)', [$keyword.'*'])
+                ->orWhereHas('user', function ($query) use ($keyword) {
+                    $query->where('name', 'LIKE', '%'.$keyword.'%');
+                })
+                ->orWhereHas('evaluator', function ($query) use ($keyword) {
+                    $query->where('name', 'LIKE', '%'.$keyword.'%');
+                });
         }
 
-        $totalCount = $userRequest->count();
+        $totalCount = $storeRequest->count();
 
-        $list = $userRequest->skip($offset)
+        $list = $storeRequest->skip($offset)
             ->take($itemsPerPage)
             ->orderByRaw('status = "pending" DESC, created_at DESC')
             ->get();
 
         return view('requests.index')
-            ->with('userRequests', $list)
+            ->with('storeRequests', $list)
             ->with('itemStart', $offset + 1)
             ->with('itemEnd', $list->count() + $offset)
             ->with('totalCount', $totalCount)

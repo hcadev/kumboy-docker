@@ -2,8 +2,8 @@
 
 @can('viewAccountSettings', $user)
     <div class="row">
-        <div class="col-12 px-3">
-            <h3 class="border-bottom mt-3 py-2">Account Settings</h3>
+        <div class="col-12">
+            <h4 class="border-bottom mt-3 pb-2">Account Settings</h4>
 
             @if (session('messageType'))
                 <div class="alert alert-{{ session('messageType') }}">{{ session('messageContent') }}</div>

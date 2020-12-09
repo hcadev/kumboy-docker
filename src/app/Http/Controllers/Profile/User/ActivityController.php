@@ -2,17 +2,28 @@
 namespace App\Http\Controllers\Profile\User;
 
 use App\Models\UserActivity;
+use Illuminate\Http\Request;
 
-class ActivityController extends BaseController
+class ActivityController extends ProfileController
 {
-    public function viewActivities($userUuid, $currentPage, $itemsPerPage, UserActivity $userActivityModel)
+    public function searchActivity($userUuid, Request $request)
+    {
+        return redirect()
+            ->route('user.activity-log', [$userUuid, 1, 25, $request->get('keyword')]);
+    }
+
+    public function viewActivities($userUuid, $currentPage = 1, $itemsPerPage = 15, $keyword = null)
     {
         $this->authorize('viewActivities', [new UserActivity(), $userUuid]);
 
         $this->profile->with('content', 'users.profile.activity.index');
 
-        $userActivity = $userActivityModel->newQuery()
+        $userActivity = UserActivity::query()
             ->where('user_uuid', $userUuid);
+
+        if (empty($keyword) === false) {
+            $userActivity->whereRaw('MATCH (action_taken) AGAINST (? IN BOOLEAN MODE)', [$keyword.'*']);
+        }
 
         $totalCount = $userActivity->count();
         $offset = ($currentPage - 1) * $itemsPerPage;
@@ -31,6 +42,7 @@ class ActivityController extends BaseController
                 'currentPage' => $currentPage,
                 'totalPages' => ceil($totalCount / $itemsPerPage),
                 'itemsPerPage' => $itemsPerPage,
+                'keyword' => $keyword,
             ]
         );
     }

@@ -7,7 +7,7 @@ use App\Services\MailService;
 use App\Services\VerificationService;
 use App\Traits\Validation\HasUserValidation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -56,7 +56,7 @@ class UserController extends DatabaseController
         return view('users.registration_form');
     }
 
-    public function register(Request $request, User $userModel, VerificationService $verificationService)
+    public function register(Request $request, VerificationService $verificationService)
     {
         $validatedData = $request->validate($this->getUserRules());
 
@@ -65,7 +65,7 @@ class UserController extends DatabaseController
 
             $verificationService->consumeVerificationCode($validatedData['email'], $validatedData['verification_code']);
 
-            $userModel->newQuery()
+            User::query()
                 ->create([
                     'uuid' => (string) Str::orderedUuid(),
                     'name' => $validatedData['name'],
@@ -86,6 +86,59 @@ class UserController extends DatabaseController
             return back()
                 ->with('messageType', 'success')
                 ->with('messageContent', 'Server error.');
+        }
+    }
+
+    public function search(Request $request)
+    {
+        return redirect()
+            ->route('user.view-all', [1, 25, $request->get('keyword')]);
+    }
+
+    public function viewAll($currentPage = 1, $itemsPerPage = 15, $keyword = null)
+    {
+        $this->authorize('viewAll', new User());
+
+        $users = User::query();
+
+        if (empty($keyword) === false) {
+            $users->whereRaw('MATCH (uuid, name, email) AGAINST(? IN BOOLEAN MODE)', [$keyword.'*']);
+        }
+
+        $offset = ($currentPage - 1) * $itemsPerPage;
+        $totalCount = $users->count();
+
+        $list = $users->skip($offset)
+            ->take($itemsPerPage)
+            ->orderBy('name')
+            ->get();
+
+        return view('users.index')
+            ->with('users', $list)
+            ->with('itemStart', $offset + 1)
+            ->with('itemEnd', $list->count() + $offset)
+            ->with('totalCount', $totalCount)
+            ->with('currentPage', $currentPage)
+            ->with('totalPages', ceil($totalCount / $itemsPerPage))
+            ->with('itemsPerPage', $itemsPerPage)
+            ->with('keyword', $keyword);
+    }
+
+    public function findByEmail(Request $request)
+    {
+        if ($request->wantsJson()) {
+            $user = User::query()
+                ->where('email', $request->get('email'))
+                ->whereNull('banned_until')
+                ->first();
+
+            if ($user === null) {
+                return response()->json('User not found.', 404);
+            } elseif ($user->uuid === Auth::user()->uuid) {
+                return response()->json('Pick a user other than yourself.', 400);
+            } else {
+                return response()->json($user);
+            }
         }
     }
 }

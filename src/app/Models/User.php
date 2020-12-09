@@ -47,11 +47,11 @@ class User extends Authenticatable
 
     public function requests()
     {
-        return $this->hasMany(UserRequest::class, 'user_uuid', 'uuid');
+        return $this->hasMany(StoreRequest::class);
     }
 
     public function evaluatedRequests()
     {
-        return $this->hasMany(UserRequest::class, 'evaluated_by', 'uuid');
+        return $this->hasMany(StoreRequest::class);
     }
 }

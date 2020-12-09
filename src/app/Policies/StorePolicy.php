@@ -19,4 +19,14 @@ class StorePolicy
     {
         return $user->uuid === $user_uuid;
     }
+
+    public function editStore(User $user, Store $store)
+    {
+        return $user->uuid === $store->user_uuid;
+    }
+
+    public function transferStore(User $user, Store $store)
+    {
+        return $user->uuid === $store->user_uuid;
+    }
 }

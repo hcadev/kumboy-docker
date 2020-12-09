@@ -22,6 +22,6 @@ class Store extends Model
     ];
 
     protected $casts = [
-        'open_until' => 'datetime:Y-m-d H:i:s',
+        'open_until' => 'datetime:Y-m-d',
     ];
 }
