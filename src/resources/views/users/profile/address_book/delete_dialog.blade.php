@@ -29,10 +29,10 @@
         </p>
 
         <div class="row">
-            <div class="col-12 text-right">
+            <div class="col-12 text-end">
                 <form method="POST">
                     @csrf
-                    <a href="{{ route('user.address-book', $user->uuid) }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+                    <a href="{{ route('user.address-book', $user->id) }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                 </form>
             </div>

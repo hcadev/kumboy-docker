@@ -18,33 +18,33 @@ class StoreRequestController extends StoreController
 {
     use HasStoreApplicationValidation, HasStoreTransferValidation;
 
-    public function searchRequest($userUuid, Request $request)
+    public function searchRequest($user_id, Request $request)
     {
         return redirect()
-            ->route('user.store-requests', [$userUuid, 1, 25, $request->get('keyword')]);
+            ->route('user.store-requests', [$user_id, 1, 25, $request->get('keyword')]);
     }
 
-    public function viewRequests($userUuid, $currentPage = 1, $itemsPerPage = 15, $keyword = null)
+    public function viewRequests($user_id, $current_page = 1, $items_per_page = 15, $keyword = null)
     {
-        $this->authorize('viewStoreRequests', [new StoreRequest(), $userUuid]);
+        $this->authorize('viewStoreRequests', [new StoreRequest(), $user_id]);
 
         $this->profile->with('content', 'users.profile.stores.requests.index');
 
-        $storeRequest = StoreRequest::query()
+        $store_request = StoreRequest::query()
             ->addSelect(['user_name' => User::query()
-                ->whereColumn('uuid', 'store_requests.user_uuid')
+                ->whereColumn('id', 'store_requests.user_id')
                 ->select('name')
                 ->limit(1)
             ])
             ->addSelect(['evaluator_name' => User::query()
-                ->whereColumn('uuid', 'store_requests.evaluated_by')
+                ->whereColumn('id', 'store_requests.evaluated_by')
                 ->select('name')
                 ->limit(1)
             ])
-            ->where('user_uuid', $userUuid);
+            ->where('user_id', $user_id);
 
         if (empty($keyword) === false) {
-            $storeRequest->where(function ($query) use ($keyword) {
+            $store_request->where(function ($query) use ($keyword) {
                 $query->whereRaw('MATCH (code, type, status) AGAINST (? IN BOOLEAN MODE)', [$keyword.'*'])
                     ->orWhereHas('evaluator', function ($query) use ($keyword) {
                         $query->where('name', 'LIKE', '%'.$keyword.'%');
@@ -52,215 +52,220 @@ class StoreRequestController extends StoreController
             });
         }
 
-        $totalCount = $storeRequest->count();
-        $offset = ($currentPage - 1) * $itemsPerPage;
+        $total_count = $store_request->count();
+        $offset = ($current_page - 1) * $items_per_page;
 
-        $requests = $storeRequest->skip($offset)
-            ->take($itemsPerPage)
+        $requests = $store_request->skip($offset)
+            ->take($items_per_page)
             ->orderByDesc('created_at')
             ->get();
 
         return $this->profile->with('contentData', [
                 'user' => $this->user,
                 'requests' => $requests,
-                'itemStart' => $offset + 1,
-                'itemEnd' => $requests->count() + $offset,
-                'totalCount' => $totalCount,
-                'currentPage' => $currentPage,
-                'totalPages' => ceil($totalCount / $itemsPerPage),
-                'itemsPerPage' => $itemsPerPage,
+                'item_start' => $offset + 1,
+                'item_end' => $requests->count() + $offset,
+                'total_count' => $total_count,
+                'current_page' => $current_page,
+                'total_pages' => ceil($total_count / $items_per_page),
+                'items_per_page' => $items_per_page,
                 'keyword' => $keyword,
             ]
         );
     }
 
-    public function viewRequestDetails($userUuid, $requestCode)
+    public function viewRequestDetails($user_id, $requestCode)
     {
-        $storeRequest = StoreRequest::query()
+        $store_request = StoreRequest::query()
             ->addSelect(['user_name' => User::query()
-                ->whereColumn('uuid', 'store_requests.user_uuid')
+                ->whereColumn('id', 'store_requests.user_id')
                 ->select('name')
                 ->limit(1)
             ])
             ->addSelect(['evaluator_name' => User::query()
-                ->whereColumn('uuid', 'store_requests.evaluated_by')
+                ->whereColumn('id', 'store_requests.evaluated_by')
                 ->select('name')
                 ->limit(1)
             ])
-            ->where('user_uuid', $userUuid)
+            ->where('user_id', $user_id)
             ->where('code', $requestCode)
             ->first();
 
-        if ($storeRequest === null) {
+        if ($store_request === null) {
             abort(404);
         }
 
-        if (in_array($storeRequest->type, ['store creation', 'store update'])) {
-            $storeRequest->store_application = $storeRequest->storeApplication()->first()->toArray();
-        } elseif (strtolower($storeRequest->type) === 'store transfer') {
-            $storeRequest->store_transfer = $storeRequest->storeTransfer()
+        if (in_array($store_request->type, ['store creation', 'store update'])) {
+            $store_request->store_application = $store_request->storeApplication()->first()->toArray();
+
+            if ($store_request->type === 'store update') {
+                $store_original = Store::query()->find($store_request->store_application['store_id']);
+
+                $store_request->store_original = $store_original !== null ? $store_original->toArray() : [];
+            }
+        } elseif ($store_request->type === 'store transfer') {
+            $store_request->store_transfer = $store_request->storeTransfer()
                 ->addSelect(['target_name' => User::query()
-                    ->whereColumn('uuid', 'store_transfer_requests.target_uuid')
+                    ->whereColumn('id', 'store_transfer_requests.target_id')
                     ->select('name')
                     ->limit(1)
                 ])
                 ->first()
                 ->toArray();
-            $storeRequest->store = Store::query()
-                ->where('uuid', $storeRequest->store_transfer['uuid'])
-                ->first();
+
+            $store_request->store = Store::query()->find($store_request->store_transfer['store_id']);
         }
 
-        $this->authorize('viewRequestDetails', $storeRequest);
+        $this->authorize('viewRequestDetails', $store_request);
 
         return $this->profile
             ->with('content', 'users.profile.stores.requests.details')
-            ->with('contentData', ['request' => $storeRequest]);
+            ->with('contentData', ['request' => $store_request]);
     }
 
-    public function cancelRequest($userUuid, $requestCode)
+    public function cancelRequest($user_id, $requestCode)
     {
-        $storeRequest = StoreRequest::query()
-            ->where('user_uuid', $userUuid)
+        $store_request = StoreRequest::query()
+            ->where('user_id', $user_id)
             ->where('code', $requestCode)
             ->where('status', 'pending')
             ->first();
 
-        if ($storeRequest === null) {
+        if ($store_request === null) {
             abort(404);
         }
 
-        $this->authorize('cancelRequest', $storeRequest);
+        $this->authorize('cancelRequest', $store_request);
 
         try {
             $this->beginTransaction();
 
-            $storeRequest->update(['status' => 'cancelled']);
+            $store_request->update(['status' => 'cancelled']);
 
-            event(new StoreRequestCancel($storeRequest));
+            event(new StoreRequestCancel($store_request));
 
             $this->commit();
 
             return back()
-                ->with('messageType', 'success')
-                ->with('messageContent', 'Request has been cancelled.');
+                ->with('message_type', 'success')
+                ->with('message_content', 'Request has been cancelled.');
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 
-    public function approveRequest($userUuid, $requestCode)
+    public function approveRequest($user_id, $requestCode)
     {
-        $storeRequest = StoreRequest::query()
-            ->where('user_uuid', $userUuid)
+        $store_request = StoreRequest::query()
+            ->where('user_id', $user_id)
             ->where('code', $requestCode)
             ->where('status', 'pending')
             ->first();
 
-        if ($storeRequest === null) {
+        if ($store_request === null) {
             abort(404);
         }
 
-        $this->authorize('approveRequest', $storeRequest);
+        $this->authorize('approveRequest', $store_request);
 
         try {
             $this->beginTransaction();
 
-            switch ($storeRequest->type) {
+            switch ($store_request->type) {
                 case 'store creation':
-                    $storeApplication = $storeRequest->storeApplication()->first();
-                    $this->addStore($userUuid, $storeApplication);
+                    $store_application = $store_request->storeApplication()->first();
+                    $this->addStore($user_id, $store_application);
                     break;
                 case 'store update':
-                    $storeApplication = $storeRequest->storeApplication()->first();
-                    $storeApplication->user_uuid = $storeRequest->user_uuid;
-                    $this->updateStore($storeApplication->uuid, $storeApplication);
+                    $store_application = $store_request->storeApplication()->first();
+                    $store_application->user_id = $store_request->user_id;
+                    $this->updateStore($store_application->store_id, $store_application);
                     break;
                 case 'store transfer':
-                    $storeTransfer = $storeRequest->storeTransfer()->first();
-                    $this->transferStore($userUuid, $storeTransfer->uuid, $storeTransfer->target_uuid);
+                    $store_transfer = $store_request->storeTransfer()->first();
+                    $this->transferStore($user_id, $store_transfer->id, $store_transfer->target_id);
                     break;
             }
 
-            $storeRequest->update([
+            $store_request->update([
                 'status' => 'approved',
-                'evaluated_by' => Auth::user()->uuid,
+                'evaluated_by' => Auth::user()->id,
             ]);
 
-            event(new StoreRequestApprove($storeRequest));
+            event(new StoreRequestApprove($store_request));
 
             $this->commit();
 
             return back()
-                ->with('messageType', 'success')
-                ->with('messageContent', 'Request has been approved.');
+                ->with('message_type', 'success')
+                ->with('message_content', 'Request has been approved.');
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 
-    public function rejectRequest($userUuid, $requestCode)
+    public function rejectRequest($user_id, $requestCode)
     {
-        $storeRequest = StoreRequest::query()
-            ->where('user_uuid', $userUuid)
+        $store_request = StoreRequest::query()
+            ->where('user_id', $user_id)
             ->where('code', $requestCode)
             ->where('status', 'pending')
             ->first();
 
-        if ($storeRequest === null) {
+        if ($store_request === null) {
             abort(404);
         }
 
-        $this->authorize('rejectRequest', $storeRequest);
+        $this->authorize('rejectRequest', $store_request);
 
         try {
             $this->beginTransaction();
 
-            $storeRequest->update([
+            $store_request->update([
                 'status' => 'rejected',
-                'evaluated_by' => Auth::user()->uuid,
+                'evaluated_by' => Auth::user()->id,
             ]);
 
-            event(new StoreRequestReject($storeRequest));
+            event(new StoreRequestReject($store_request));
 
             $this->commit();
 
             return back()
-                ->with('messageType', 'success')
-                ->with('messageContent', 'Request has been rejected.');
+                ->with('message_type', 'success')
+                ->with('message_content', 'Request has been rejected.');
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 
-    public function showAddStoreForm($userUuid)
+    public function showAddStoreForm($user_id)
     {
-        $this->authorize('addStore', [new Store(), $userUuid]);
+        $this->authorize('addStore', [new Store(), $user_id]);
 
         return $this->profile
             ->with('content', 'users.profile.stores.requests.application.form')
             ->with('contentData', [
-                'formTitle' => 'Add Store',
+                'form_title' => 'Add Store',
             ]);
     }
 
-    public function showEditStoreForm($userUuid, $storeUuid)
+    public function showEditStoreForm($user_id, $store_id)
     {
         $store = Store::query()
-            ->where('uuid', $storeUuid)
-            ->where('user_uuid', $userUuid)
+            ->where('id', $store_id)
+            ->where('user_id', $user_id)
             ->first();
 
         if ($store === null) {
@@ -270,123 +275,123 @@ class StoreRequestController extends StoreController
         $this->authorize('editStore', $store);
 
         return $this->profile
-            ->with('content', 'users.profile.users.profile.stores.requests.application.form')
+            ->with('content', 'users.profile.stores.requests.application.form')
             ->with('contentData', [
-                'formTitle' => 'Edit Store',
-                'formData' => $store,
+                'form_title' => 'Edit Store',
+                'form_data' => $store,
             ]);
     }
 
-    public function createStoreApplication(Request $request, MapService $mapService, $userUuid, $storeUuid = null)
+    public function createStoreApplication(Request $request, MapService $map_service, $user_id, $store_id = null)
     {
-        $this->authorize('addStoreApplication', [new StoreRequest(), $userUuid]);
+        $this->authorize('addStoreApplication', [new StoreRequest(), $user_id]);
 
-        // insert store uuid for name validation to work
-        $request->merge(['uuid' => $storeUuid]);
-        $validatedData = $request->validate($this->getStoreApplicationRules());
+        // insert store id for name validation to work
+        $request->merge(['store_id' => $store_id]);
+        $validated_data = $request->validate($this->getStoreApplicationRules());
 
         try {
             $this->beginTransaction();
 
-            if ($mapService->isValidAddress($validatedData['map_coordinates'], $validatedData['map_address'])) {
+            if ($map_service->isValidAddress($validated_data['map_coordinates'], $validated_data['map_address'])) {
                 // check if there are any changes in case of store update before proceeding
-                if ($storeUuid !== null) {
+                if ($store_id !== null) {
                     $store = Store::query()
-                        ->where('uuid', $storeUuid)
+                        ->where('id', $store_id)
                         ->first();
 
                     if ($store === null) {
                         abort(404);
                     }
 
-                    $store->fill($validatedData);
+                    $store->fill($validated_data);
 
                     if ($store->isDirty() === false) {
                         return back()
-                            ->with('messageType', 'success')
-                            ->with('messageContent', 'No changes were made.');
+                            ->with('message_type', 'success')
+                            ->with('message_content', 'No changes were made.');
                     }
                 }
 
-                // reference number date + user_uuid + last 4 digit unix timestamp
+                // reference number date + user_id + last 4 digit unix timestamp
                 $code = date('Ymd').$this->user->id.substr(strtotime('now'), -4);
 
-                $storeRequest = StoreRequest::query()
+                $store_request = StoreRequest::query()
                     ->create([
-                        'user_uuid' => $userUuid,
+                        'user_id' => $user_id,
                         'code' => $code,
-                        'type' => $storeUuid === null ? 'store creation' : 'store update',
+                        'type' => $store_id === null ? 'store creation' : 'store update',
                         'status' => preg_match('/admin/i', Auth::user()->role) ? 'approved' : 'pending',
-                        'evaluated_by' => preg_match('/admin/i', Auth::user()->role) ? Auth::user()->uuid : null,
+                        'evaluated_by' => preg_match('/admin/i', Auth::user()->role) ? Auth::user()->id : null,
                     ]);
 
-                $storeApplication = $storeRequest->storeApplication()
+                $store_application = $store_request->storeApplication()
                     ->create([
                         'request_code' => $code,
-                        'uuid' => $storeUuid,
-                        'name' => $validatedData['name'],
-                        'contact_number' => $validatedData['contact_number'],
-                        'address' => $validatedData['address'],
-                        'map_coordinates' => $validatedData['map_coordinates'],
-                        'map_address' => $validatedData['map_address'],
-                        'open_until' => $validatedData['open_until'],
+                        'store_id' => $store_id,
+                        'name' => $validated_data['name'],
+                        'contact_number' => $validated_data['contact_number'],
+                        'address' => $validated_data['address'],
+                        'map_coordinates' => $validated_data['map_coordinates'],
+                        'map_address' => $validated_data['map_address'],
+                        'open_until' => $validated_data['open_until'],
                         'attachment' => $code.'.pdf',
                     ]);
 
-                if ($storeRequest->status === 'approved') {
-                    if ($storeRequest->type === 'store creation') {
-                        $this->addStore($userUuid, $storeApplication);
-                    } elseif ($storeRequest->type === 'store update') {
-                        $storeApplication->user_uuid = $storeRequest->user_uuid;
-                        $this->updateStore($storeApplication->uuid, $storeApplication);
+                if ($store_request->status === 'approved') {
+                    if ($store_request->type === 'store creation') {
+                        $this->addStore($user_id, $store_application);
+                    } elseif ($store_request->type === 'store update') {
+                        $store_application->user_id = $store_request->user_id;
+                        $this->updateStore($store_application->store_id, $store_application);
                     }
                 }
 
-                event(new StoreRequestCreate($storeRequest));
+                event(new StoreRequestCreate($store_request));
 
                 $request->file('attachment')->storeAs('attachments', $code.'.pdf');
 
                 $this->commit();
 
-                if ($storeRequest->status === 'approved') {
+                if ($store_request->status === 'approved') {
                     $redirect = redirect()
-                        ->route('user.stores', $userUuid)
-                        ->with('messageType', 'success');
+                        ->route('user.stores', $user_id)
+                        ->with('message_type', 'success');
 
-                    if ($storeRequest->type === 'store creation') {
-                        $redirect->with('messageContent', 'Store has been created.');
-                    } elseif ($storeRequest->type === 'store update') {
-                        $redirect->with('messageContent', 'Store has been updated.');
+                    if ($store_request->type === 'store creation') {
+                        $redirect->with('message_content', 'Store has been created.');
+                    } elseif ($store_request->type === 'store update') {
+                        $redirect->with('message_content', 'Store has been updated.');
                     }
 
                     return $redirect;
                 } else {
                     return redirect()
-                        ->route('user.stores', $userUuid)
-                        ->with('messageType', 'success')
-                        ->with('messageContent', 'Application has been submitted. Please wait for approval. Ref#:'.$code);
+                        ->route('user.stores', $user_id)
+                        ->with('message_type', 'success')
+                        ->with('message_content', 'Application has been submitted. Please wait for approval. Ref#:'.$code);
                 }
             } else {
                 $this->rollback();
 
                 return back()
-                    ->with('messageType', 'danger')
-                    ->with('messageContent', 'Invalid map address or location is out of service area.');
+                    ->with('message_type', 'danger')
+                    ->with('message_content', 'Invalid map address or location is out of service area.');
             }
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 
-    public function showTransferStoreForm($userUuid, $storeUuid)
+    public function showTransferStoreForm($user_id, $store_id)
     {
         $store = Store::query()
-            ->where('user_uuid', $userUuid)
-            ->where('uuid', $storeUuid)
+            ->where('user_id', $user_id)
+            ->where('id', $store_id)
             ->first();
 
         if ($store === null) {
@@ -400,85 +405,85 @@ class StoreRequestController extends StoreController
             ->with('contentData', ['store' => $store]);
     }
 
-    public function createStoreTransfer(Request $request, $userUuid, $storeUuid)
+    public function createStoreTransfer(Request $request, $user_id, $store_id)
     {
         $store = Store::query()
-            ->where('user_uuid', $userUuid)
-            ->where('uuid', $storeUuid)
+            ->where('user_id', $user_id)
+            ->where('id', $store_id)
             ->first();
 
         $this->authorize('transferStore', $store);
 
-        $validatedData = $request->validate($this->getStoreTransferRules());
+        $validated_data = $request->validate($this->getStoreTransferRules());
 
         $target = User::query()
-            ->where('email', $validatedData['email'])
+            ->where('email', $validated_data['email'])
             ->first();
 
         try {
             $this->beginTransaction();
 
             // check for duplicate request
-            $storeRequest = StoreRequest::query()
+            $store_request = StoreRequest::query()
                 ->where('status', 'pending')
-                ->whereHas('storeTransfer', function ($query) use ($storeUuid) {
-                    $query->where('uuid', $storeUuid);
+                ->whereHas('storeTransfer', function ($query) use ($store_id) {
+                    $query->where('user_id', $store_id);
                 })
                 ->first();
 
-            if ($storeRequest !== null) {
+            if ($store_request !== null) {
                 return back()
-                    ->with('messageType', 'danger')
-                    ->with('messageContent', 'A pending store transfer request for this store already exists.');
+                    ->with('message_type', 'danger')
+                    ->with('message_content', 'A pending store transfer request for this store already exists.');
             }
 
-            // reference number date + user_uuid + last 4 digit unix timestamp
+            // reference number date + user_id + last 4 digit unix timestamp
             $code = date('Ymd').$this->user->id.substr(strtotime('now'), -4);
 
-            $storeRequest = StoreRequest::query()
+            $store_request = StoreRequest::query()
                 ->create([
-                    'user_uuid' => $userUuid,
+                    'user_id' => $user_id,
                     'code' => $code,
                     'type' => 'store transfer',
                     'status' => preg_match('/admin/i', Auth::user()->role) ? 'approved' : 'pending',
-                    'evaluated_by' => preg_match('/admin/i', Auth::user()->role) ? Auth::user()->uuid : null,
+                    'evaluated_by' => preg_match('/admin/i', Auth::user()->role) ? Auth::user()->id : null,
                 ]);
 
-            $storeTransfer = $storeRequest->storeTransfer()
+            $store_transfer = $store_request->storeTransfer()
                 ->create([
                     'request_code' => $code,
-                    'uuid' => $store->uuid,
-                    'target_uuid' => $target->uuid,
+                    'store_id' => $store->id,
+                    'target_id' => $target->id,
                     'attachment' => $code.'.pdf',
                 ]);
 
-            if ($storeRequest->status === 'approved') {
-                $this->transferStore($userUuid, $store->uuid, $target->uuid);
+            if ($store_request->status === 'approved') {
+                $this->transferStore($user_id, $store->id, $target->id);
             }
 
-            event(new StoreRequestCreate($storeRequest));
+            event(new StoreRequestCreate($store_request));
 
             $request->file('attachment')->storeAs('attachments', $code.'.pdf');
 
             $this->commit();
 
-            if ($storeRequest->status === 'approved') {
+            if ($store_request->status === 'approved') {
                 return redirect()
-                    ->route('user.stores', $userUuid)
-                    ->with('messageType', 'success')
-                    ->with('messageContent', 'Store has been transferred.');
+                    ->route('user.stores', $user_id)
+                    ->with('message_type', 'success')
+                    ->with('message_content', 'Store has been transferred.');
             } else {
                 return redirect()
-                    ->route('user.stores', $userUuid)
-                    ->with('messageType', 'success')
-                    ->with('messageContent', 'Request has been submitted. Please wait for approval. Ref#:'.$code);
+                    ->route('user.stores', $user_id)
+                    ->with('message_type', 'success')
+                    ->with('message_content', 'Request has been submitted. Please wait for approval. Ref#:'.$code);
             }
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 }

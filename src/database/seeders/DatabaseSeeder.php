@@ -19,7 +19,6 @@ class DatabaseSeeder extends Seeder
         // insert super admin account
         User::query()
             ->create([
-                'uuid' => (string) Str::orderedUuid(),
                 'name' => env('SUPERADMIN_NAME'),
                 'email' => env('SUPERADMIN_EMAIL'),
                 'email_verified_at' => now(),

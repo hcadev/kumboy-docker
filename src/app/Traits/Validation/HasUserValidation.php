@@ -3,7 +3,7 @@ namespace App\Traits\Validation;
 
 trait HasUserValidation
 {
-    private $userRules = [
+    private $user_rules = [
         'name' => 'required|max:255',
         'email' => 'required|email|unique:users|max:255',
         'verification_code' => 'required|alpha_num|size:8|valid_code:email',
@@ -14,7 +14,7 @@ trait HasUserValidation
     public function getUserRules(array $fields = [])
     {
         return empty($fields)
-            ? $this->userRules
-            : array_intersect_key($this->userRules, array_flip($fields));
+            ? $this->user_rules
+            : array_intersect_key($this->user_rules, array_flip($fields));
     }
 }

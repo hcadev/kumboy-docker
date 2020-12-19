@@ -6,42 +6,42 @@ use Illuminate\Http\Request;
 
 class ActivityController extends ProfileController
 {
-    public function searchActivity($userUuid, Request $request)
+    public function searchActivity($user_id, Request $request)
     {
         return redirect()
-            ->route('user.activity-log', [$userUuid, 1, 25, $request->get('keyword')]);
+            ->route('user.activity-log', [$user_id, 1, 25, $request->get('keyword')]);
     }
 
-    public function viewActivities($userUuid, $currentPage = 1, $itemsPerPage = 15, $keyword = null)
+    public function viewActivities($user_id, $current_page = 1, $items_per_page = 15, $keyword = null)
     {
-        $this->authorize('viewActivities', [new UserActivity(), $userUuid]);
+        $this->authorize('viewActivities', [new UserActivity(), $user_id]);
 
         $this->profile->with('content', 'users.profile.activity.index');
 
         $userActivity = UserActivity::query()
-            ->where('user_uuid', $userUuid);
+            ->where('user_id', $user_id);
 
         if (empty($keyword) === false) {
             $userActivity->whereRaw('MATCH (action_taken) AGAINST (? IN BOOLEAN MODE)', [$keyword.'*']);
         }
 
-        $totalCount = $userActivity->count();
-        $offset = ($currentPage - 1) * $itemsPerPage;
+        $total_count = $userActivity->count();
+        $offset = ($current_page - 1) * $items_per_page;
 
         $activities = $userActivity->skip($offset)
-            ->take($itemsPerPage)
+            ->take($items_per_page)
             ->orderByDesc('date_recorded')
             ->get();
 
         return $this->profile->with('contentData', [
                 'user' => $this->user,
                 'activities' => $activities,
-                'itemStart' => $offset + 1,
-                'itemEnd' => $activities->count() + $offset,
-                'totalCount' => $totalCount,
-                'currentPage' => $currentPage,
-                'totalPages' => ceil($totalCount / $itemsPerPage),
-                'itemsPerPage' => $itemsPerPage,
+                'item_start' => $offset + 1,
+                'item_end' => $activities->count() + $offset,
+                'total_count' => $total_count,
+                'current_page' => $current_page,
+                'total_pages' => ceil($total_count / $items_per_page),
+                'items_per_page' => $items_per_page,
                 'keyword' => $keyword,
             ]
         );

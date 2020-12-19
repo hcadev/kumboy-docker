@@ -22,10 +22,10 @@
                         @foreach ($users AS $user)
                             <div class="d-flex justify-content-between py-2 border-bottom">
                                 <div>
-                                    <a href="{{ route('user.activity-log', $user->uuid) }}" class="h6">{{ $user->name }}</a> <br>
+                                    <a href="{{ route('user.activity-log', $user->id) }}" class="h6">{{ $user->name }}</a> <br>
                                     <span class="small text-secondary">{{ ucwords($user->role) }}</span>
                                 </div>
-                                <div class="text-right">
+                                <div class="text-end">
                                     <span class="small">{{ $user->email }}</span> <br>
                                     <span class="small text-{{ $user->banned_until === null ? 'success' : 'danger' }}">
                                         @if ($user->banned_until === null)
@@ -40,12 +40,12 @@
                     @endif
 
                     @include('shared.pagination', [
-                        'itemStart' => $itemStart,
-                        'itemEnd' => $itemEnd,
-                        'totalCount' => $totalCount,
-                        'currentPage' => $currentPage,
-                        'totalPages' => $totalPages,
-                        'itemsPerPage' => $itemsPerPage,
+                        'item_start' => $item_start,
+                        'item_end' => $item_end,
+                        'total_count' => $total_count,
+                        'current_page' => $current_page,
+                        'total_pages' => $total_pages,
+                        'items_per_page' => $items_per_page,
                         'keyword' => $keyword,
                         'url' => route('user.view-all'),
                     ])

@@ -3,7 +3,7 @@ namespace App\Traits\Validation;
 
 trait HasUserAddressValidation
 {
-    private $userAddressRules = [
+    private $user_address_rules = [
         'label' => 'required',
         'contact_person' => 'required',
         'contact_number' => 'required|contact_number',
@@ -15,7 +15,7 @@ trait HasUserAddressValidation
     public function getUserAddressRules(array $fields = [])
     {
         return empty($fields)
-            ? $this->userAddressRules
-            : array_intersect_key($this->userAddressRules, array_flip($fields));
+            ? $this->user_address_rules
+            : array_intersect_key($this->user_address_rules, array_flip($fields));
     }
 }

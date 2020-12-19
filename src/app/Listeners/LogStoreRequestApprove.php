@@ -29,12 +29,12 @@ class LogStoreRequestApprove
     {
         UserActivity::query()
             ->create([
-                'user_uuid' => $event->storeRequest->evaluated_by,
-                'date_recorded' => $event->storeRequest->updated_at,
+                'user_id' => $event->store_request->evaluated_by,
+                'date_recorded' => $event->store_request->updated_at,
                 'action_taken' => 'Approved '
-                    .str_replace('_', ' ', $event->storeRequest->type)
+                    .str_replace('_', ' ', $event->store_request->type)
                     .' request with reference #'
-                    .$event->storeRequest->code.'.',
+                    .$event->store_request->code.'.',
             ]);
     }
 }

@@ -12,17 +12,17 @@ class StoreTransferred extends Notification
 {
     use Queueable;
 
-    public $storeTransfer;
+    public $store_transfer;
 
     /**
      * Create a new notification instance.
      *
-     * @param StoreTransfer $storeTransfer
+     * @param StoreTransfer $store_transfer
      * @return void
      */
-    public function __construct(StoreTransfer $storeTransfer)
+    public function __construct(StoreTransfer $store_transfer)
     {
-        $this->storeTransfer = $storeTransfer;
+        $this->store_transfer = $store_transfer;
     }
 
     /**
@@ -45,7 +45,7 @@ class StoreTransferred extends Notification
     public function toArray($notifiable)
     {
         return [
-            'store_uuid' => $this->storeTransfer->uuid,
+            'store_id' => $this->store_transfer->store_id,
             'type' => 'store_received',
             'message' => 'A store ownership has been transferred to you.',
         ];

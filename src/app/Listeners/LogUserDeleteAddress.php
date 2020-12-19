@@ -29,7 +29,7 @@ class LogUserDeleteAddress
     {
         UserActivity::query()
             ->create([
-                'user_uuid' => $event->address->user_uuid,
+                'user_id' => $event->address->user_id,
                 'date_recorded' => now(),
                 'action_taken' => 'Deleted address on coordinates '.$event->address->map_coordinates.'.',
             ]);

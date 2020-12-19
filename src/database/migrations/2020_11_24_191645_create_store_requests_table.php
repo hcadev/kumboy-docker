@@ -16,22 +16,20 @@ class CreateStoreRequestsTable extends Migration
     {
         Schema::create('store_requests', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_uuid');
+            $table->unsignedBigInteger('user_id');
             $table->string('code')->unique();
             $table->string('type');
             $table->string('status');
-            $table->uuid('evaluated_by')->nullable();
+            $table->unsignedBigInteger('evaluated_by')->nullable();
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
 
-//            $table->foreign('user_uuid')->references('uuid')->on('users');
-            $table->foreign('evaluated_by')->references('uuid')->on('users');
+            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('evaluated_by')->references('id')->on('users');
             $table->engine = 'InnoDB';
         });
 
-//        DB::statement('ALTER TABLE store_requests DROP FOREIGN KEY store_requests_user_uuid_foreign');
         DB::statement('ALTER TABLE store_requests ADD FULLTEXT (code, type, status)');
-        DB::statement('ALTER TABLE store_requests ADD FOREIGN KEY store_requests_user_uuid_foreign (user_uuid) REFERENCES users (uuid)');
     }
 
     /**

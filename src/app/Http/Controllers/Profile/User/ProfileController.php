@@ -17,7 +17,7 @@ class ProfileController extends DatabaseController
         $this->profile = view($this->profile);
 
         $user = User::query()
-            ->where('uuid', $request->route('uuid'))
+            ->where('id', $request->route('id'))
             ->first();
 
         if ($user === null) {

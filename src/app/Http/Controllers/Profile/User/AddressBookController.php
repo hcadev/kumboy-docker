@@ -14,67 +14,67 @@ class AddressBookController extends ProfileController
 {
     use HasUserAddressValidation;
 
-    public function showAddressBook($userUuid)
+    public function showAddressBook($user_id)
     {
-        $this->authorize('viewAddressBook', [new UserAddressBook(), $userUuid]);
+        $this->authorize('viewAddressBook', [new UserAddressBook(), $user_id]);
 
         $this->profile->with('content', 'users.profile.address_book.index');
 
-        $userAddressBook = UserAddressBook::query()
-            ->where('user_uuid', $userUuid)
+        $user_address_book = UserAddressBook::query()
+            ->where('user_id', $user_id)
             ->get();
 
-        return $this->profile->with('contentData', ['addressBook' => $userAddressBook]
+        return $this->profile->with('contentData', ['addressBook' => $user_address_book]
         );
     }
 
-    public function showAddAddressForm($userUuid)
+    public function showAddAddressForm($user_id)
     {
-        $this->authorize('addAddress', [new UserAddressBook(), $userUuid]);
+        $this->authorize('addAddress', [new UserAddressBook(), $user_id]);
 
         return $this->profile
             ->with('content', 'users.profile.address_book.form')
             ->with('contentData', [
-                'formTitle' => 'Add Address',
+                'form_title' => 'Add Address',
             ]);
     }
 
-    public function addAddress($userUuid, Request $request, MapService $mapService)
+    public function addAddress($user_id, Request $request, MapService $map_service)
     {
-        $this->authorize('addAddress', [new UserAddressBook(), $userUuid]);
+        $this->authorize('addAddress', [new UserAddressBook(), $user_id]);
 
-        $validatedData = $request->validate($this->getUserAddressRules());
-        $validatedData['user_uuid'] = $userUuid;
+        $validated_data = $request->validate($this->getUserAddressRules());
+        $validated_data['user_id'] = $user_id;
 
         try {
             $this->beginTransaction();
 
-            if ($mapService->isValidAddress($validatedData['map_coordinates'], $validatedData['map_address'])) {
+            if ($map_service->isValidAddress($validated_data['map_coordinates'], $validated_data['map_address'])) {
                 $userAddress = UserAddressBook::query()
-                    ->create($validatedData);
+                    ->create($validated_data);
 
                 event(new UserAddAddress($userAddress));
 
                 $this->commit();
 
-                return redirect()->route('user.address-book', $userUuid);
+                return redirect()->route('user.address-book', $user_id);
             } else {
                 $this->rollback();
 
                 return back()
-                    ->with('messageType', 'danger')
-                    ->with('messageContent', 'Invalid map address or location is out of service area.');
+                    ->with('message_type', 'danger')
+                    ->with('message_content', 'Invalid map address or location is out of service area.');
             }
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 
-    public function showEditAddressForm($userUuid, $addressID)
+    public function showEditAddressForm($user_id, $addressID)
     {
         $userAddress = UserAddressBook::query()
             ->find($addressID);
@@ -87,12 +87,12 @@ class AddressBookController extends ProfileController
 
         return $this->profile->with('content', 'users.profile.address_book.form')
             ->with('contentData', [
-                'formTitle' => 'Edit Address',
-                'formData' => $userAddress,
+                'form_title' => 'Edit Address',
+                'form_data' => $userAddress,
             ]);
     }
 
-    public function editAddress($userUuid, $addressID, Request $request, MapService $mapService)
+    public function editAddress($user_id, $addressID, Request $request, MapService $map_service)
     {
         $userAddress = UserAddressBook::query()
             ->find($addressID);
@@ -103,14 +103,14 @@ class AddressBookController extends ProfileController
 
         $this->authorize('editAddress', $userAddress);
 
-        $validatedData = $request->validate($this->getUserAddressRules());
-        $validatedData['user_uuid'] = $userUuid;
+        $validated_data = $request->validate($this->getUserAddressRules());
+        $validated_data['user_id'] = $user_id;
 
         try {
             $this->beginTransaction();
 
-            if ($mapService->isValidAddress($validatedData['map_coordinates'], $validatedData['map_address'])) {
-                $userAddress->fill($validatedData);
+            if ($map_service->isValidAddress($validated_data['map_coordinates'], $validated_data['map_address'])) {
+                $userAddress->fill($validated_data);
                 $oldAddress = $userAddress->getOriginal();
                 $userAddress->save();
 
@@ -119,8 +119,8 @@ class AddressBookController extends ProfileController
                 $this->commit();
 
                 return back()
-                    ->with('messageType', 'success')
-                    ->with('messageContent', $userAddress->wasChanged()
+                    ->with('message_type', 'success')
+                    ->with('message_content', $userAddress->wasChanged()
                         ? 'Address has been changed.'
                         : 'No changes made.'
                     );
@@ -128,19 +128,19 @@ class AddressBookController extends ProfileController
                 $this->rollback();
 
                 return back()
-                    ->with('messageType', 'danger')
-                    ->with('messageContent', 'Invalid map address or location is out of service area.');
+                    ->with('message_type', 'danger')
+                    ->with('message_content', 'Invalid map address or location is out of service area.');
             }
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 
-    public function showDeleteAddressDialog($userUuid, $addressID)
+    public function showDeleteAddressDialog($user_id, $addressID)
     {
         $address = UserAddressBook::query()
             ->find($addressID);
@@ -158,7 +158,7 @@ class AddressBookController extends ProfileController
             ]);
     }
 
-    public function deleteAddress($userUuid, $addressID)
+    public function deleteAddress($user_id, $addressID)
     {
         $userAddress = UserAddressBook::query()
             ->find($addressID);
@@ -179,16 +179,16 @@ class AddressBookController extends ProfileController
            $this->commit();
 
             return redirect()
-                ->route('user.address-book', $userUuid)
-                ->with('messageType', 'success')
-                ->with('messageContent', 'Address has been deleted.');
+                ->route('user.address-book', $user_id)
+                ->with('message_type', 'success')
+                ->with('message_content', 'Address has been deleted.');
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return redirect()
-                ->route('user.address-book', $userUuid)
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->route('user.address-book', $user_id)
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 }

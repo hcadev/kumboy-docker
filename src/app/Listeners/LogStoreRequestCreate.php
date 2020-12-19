@@ -29,13 +29,13 @@ class LogStoreRequestCreate
     {
         UserActivity::query()
             ->create([
-                'user_uuid' => $event->storeRequest->user_uuid,
-                'date_recorded' => $event->storeRequest->created_at,
+                'user_id' => $event->store_request->user_id,
+                'date_recorded' => $event->store_request->created_at,
                 'action_taken' => 'Created '
-                    .($event->storeRequest->status === 'approved' ? ' and approved ' : '')
-                    .$event->storeRequest->type
+                    .($event->store_request->status === 'approved' ? ' and approved ' : '')
+                    .$event->store_request->type
                     .' request with reference #'
-                    .$event->storeRequest->code.'.',
+                    .$event->store_request->code.'.',
             ]);
     }
 }

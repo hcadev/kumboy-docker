@@ -16,7 +16,7 @@ class CreateStoreApplicationRequestsTable extends Migration
         Schema::create('store_application_requests', function (Blueprint $table) {
             $table->id();
             $table->string('request_code');
-            $table->uuid('uuid')->nullable();
+            $table->unsignedBigInteger('store_id')->nullable();
             $table->string('name');
             $table->string('contact_number');
             $table->string('address');

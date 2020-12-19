@@ -29,7 +29,7 @@ class LogUserChangePassword
     {
         UserActivity::query()
             ->create([
-                'user_uuid' => $event->user->uuid,
+                'user_id' => $event->user->id,
                 'date_recorded' => now(),
                 'action_taken' => 'Changed password.',
             ]);

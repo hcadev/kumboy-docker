@@ -29,7 +29,7 @@ class LogUserEditAddress
     {
         UserActivity::query()
             ->create([
-                'user_uuid' => $event->address->user_uuid,
+                'user_id' => $event->address->user_id,
                 'date_recorded' => now(),
                 'action_taken' => $event->address->map_coordinates !== $event->oldAddress['map_coordinates']
                     ? 'Relocated address from coordinates '

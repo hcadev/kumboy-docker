@@ -3,12 +3,11 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\StoreRequest;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 
 class RequestController extends Controller
 {
-    public function countPending(Request $request, StoreRequest $storeRequestModel)
+    public function countPending(Request $request)
     {
         $this->authorize('countPendingRequests', new StoreRequest());
 
@@ -27,26 +26,26 @@ class RequestController extends Controller
             ->route('request.view-all', [1, 25, $request->get('keyword')]);
     }
 
-    public function viewAll($currentPage = 1, $itemsPerPage = 15, $keyword = null)
+    public function viewAll($current_page = 1, $items_per_page = 15, $keyword = null)
     {
         $this->authorize('viewAllRequests', new StoreRequest());
 
-        $offset = ($currentPage - 1) * $itemsPerPage;
+        $offset = ($current_page - 1) * $items_per_page;
 
-        $storeRequest = StoreRequest::query()
+        $store_request = StoreRequest::query()
             ->addSelect(['user_name' => User::query()
-                ->whereColumn('uuid', 'store_requests.user_uuid')
+                ->whereColumn('id', 'store_requests.user_id')
                 ->select('name')
                 ->limit(1)
             ])
             ->addSelect(['evaluator_name' => User::query()
-                ->whereColumn('uuid', 'store_requests.evaluated_by')
+                ->whereColumn('id', 'store_requests.evaluated_by')
                 ->select('name')
                 ->limit(1)
             ]);
 
         if (empty($keyword) === false) {
-            $storeRequest->whereRaw('MATCH (code, type, status) AGAINST(? IN BOOLEAN MODE)', [$keyword.'*'])
+            $store_request->whereRaw('MATCH (code, type, status) AGAINST(? IN BOOLEAN MODE)', [$keyword.'*'])
                 ->orWhereHas('user', function ($query) use ($keyword) {
                     $query->where('name', 'LIKE', '%'.$keyword.'%');
                 })
@@ -55,21 +54,21 @@ class RequestController extends Controller
                 });
         }
 
-        $totalCount = $storeRequest->count();
+        $total_count = $store_request->count();
 
-        $list = $storeRequest->skip($offset)
-            ->take($itemsPerPage)
+        $list = $store_request->skip($offset)
+            ->take($items_per_page)
             ->orderByRaw('status = "pending" DESC, created_at DESC')
             ->get();
 
         return view('requests.index')
-            ->with('storeRequests', $list)
-            ->with('itemStart', $offset + 1)
-            ->with('itemEnd', $list->count() + $offset)
-            ->with('totalCount', $totalCount)
-            ->with('currentPage', $currentPage)
-            ->with('totalPages', ceil($totalCount / $itemsPerPage))
-            ->with('itemsPerPage', $itemsPerPage)
+            ->with('store_requests', $list)
+            ->with('item_start', $offset + 1)
+            ->with('item_end', $list->count() + $offset)
+            ->with('total_count', $total_count)
+            ->with('current_page', $current_page)
+            ->with('total_pages', ceil($total_count / $items_per_page))
+            ->with('items_per_page', $items_per_page)
             ->with('keyword', $keyword);
     }
 }

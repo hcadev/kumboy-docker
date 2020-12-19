@@ -16,11 +16,11 @@ class CreateUserActivitiesTable extends Migration
     {
         Schema::create('user_activities', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_uuid');
+            $table->unsignedBigInteger('user_id');
             $table->dateTime('date_recorded');
             $table->text('action_taken');
 
-            $table->foreign('user_uuid')->references('uuid')->on('users');
+            $table->foreign('user_id')->references('id')->on('users');
             $table->engine = 'InnoDB';
         });
 

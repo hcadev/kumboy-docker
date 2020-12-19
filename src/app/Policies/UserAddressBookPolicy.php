@@ -10,23 +10,23 @@ class UserAddressBookPolicy
 {
     use HandlesAuthorization;
 
-    public function viewAddressBook(User $user, UserAddressBook $userAddressBook, $userUuid)
+    public function viewAddressBook(User $user, UserAddressBook $user_address_book, int $user_id)
     {
-        return $user->uuid === $userUuid OR in_array(strtolower($user->role), ['superadmin', 'admin']);
+        return $user->id === $user_id OR in_array(strtolower($user->role), ['superadmin', 'admin']);
     }
 
-    public function addAddress(User $user, UserAddressBook $userAddressBook, $userUuid)
+    public function addAddress(User $user, UserAddressBook $user_address_book, int $user_id)
     {
-        return $user->uuid === $userUuid;
+        return $user->id === $user_id;
     }
 
-    public function editAddress(User $user, UserAddressBook $userAddressBook)
+    public function editAddress(User $user, UserAddressBook $user_address_book)
     {
-        return $user->uuid === $userAddressBook->user_uuid;
+        return $user->id === $user_address_book->user_id;
     }
 
-    public function deleteAddress(User $user, UserAddressBook $userAddressBook)
+    public function deleteAddress(User $user, UserAddressBook $user_address_book)
     {
-        return $user->uuid === $userAddressBook->user_uuid;
+        return $user->id === $user_address_book->user_id;
     }
 }

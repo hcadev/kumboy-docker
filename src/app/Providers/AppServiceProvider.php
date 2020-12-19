@@ -46,9 +46,9 @@ class AppServiceProvider extends ServiceProvider
         }, 'Invalid format.');
 
         Validator::extend('store_application', function ($attribute, $value, $parameters, $validator) {
-            $storeUuid = $validator->getData()['uuid'] ?? null;
+            $store_id = $validator->getData()['store_id'] ?? null;
 
-            if ($storeUuid === null) {
+            if ($store_id === null) {
                 // check if store name is already taken
                 $store = Store::query()
                     ->where('name', $value)
@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
                 }
             } else {
                 $store = Store::query()
-                    ->where('uuid', '!=', $storeUuid)
+                    ->where('id', '!=', $store_id)
                     ->where('name', $value)
                     ->first();
 
@@ -68,14 +68,42 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            $storeRequest = StoreRequest::query()
+            $store_request = StoreRequest::query()
                 ->where('status', 'pending')
                 ->whereHas('storeApplication', function ($query) use ($value) {
                     $query->where('name', $value);
                 })
                 ->first();
 
-            return $storeRequest === null;
+            return $store_request === null;
         }, 'A pending request already exists for this store or the store name is already taken.');
+
+        Validator::extend('product_category', function ($attribute, $value, $parameters, $validator) {
+            list($main, $sub) = explode('|', $value);
+
+            $categories = config('system.product_categories');
+
+            if (!isset($categories[$main])) {
+                return false;
+            }
+
+            if (empty($sub) OR ($sub !== 'all' AND !in_array($sub, $categories[$main]))) {
+                return false;
+            }
+
+            return true;
+        }, 'Invalid category.');
+
+        Validator::extend('product_specifications', function ($attribute, $value, $parameters, $validator) {
+            $specifications = explode('|', $value);
+
+            foreach ($specifications AS $spec) {
+                if (!preg_match('/\w+\:\w+/', str_replace(' ', '', $spec))) {
+                    return false;
+                }
+            }
+
+            return true;
+        }, 'Some items have invalid format.');
     }
 }

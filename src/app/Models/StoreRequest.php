@@ -10,7 +10,7 @@ class StoreRequest extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_uuid',
+        'user_id',
         'code',
         'type',
         'status',
@@ -34,11 +34,11 @@ class StoreRequest extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_uuid', 'uuid');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function evaluator()
     {
-        return $this->belongsTo(User::class, 'evaluated_by', 'uuid');
+        return $this->belongsTo(User::class, 'evaluated_by', 'id');
     }
 }

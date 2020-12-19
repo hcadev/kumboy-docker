@@ -3,14 +3,14 @@
 @can('viewAccountSettings', $user)
     <div class="row">
         <div class="col-12">
-            <h4 class="border-bottom mt-3 pb-2">Account Settings</h4>
+            <h4 class="border-bottom mt-3 mb-0 pb-2">Account Settings</h4>
 
-            @if (session('messageType'))
-                <div class="alert alert-{{ session('messageType') }}">{{ session('messageContent') }}</div>
+            @if (session('message_type'))
+                <div class="alert alert-{{ session('message_type') }} mt-2">{{ session('message_content') }}</div>
             @endif
 
             <h6 class="border-bottom mt-3 pb-2">Name</h6>
-            <form id="change-name-form" action="{{ route('user.change-name', [$user->uuid]) }}" method="POST">
+            <form id="change-name-form" action="{{ route('user.change-name', [$user->id]) }}" method="POST">
                 @csrf
                 <div class="input-group">
                     <input type="text" class="form-control" name="name" value="{{ $user->name }}">
@@ -25,7 +25,7 @@
             <p>{{ $user->email }}</p>
 
             <h6 class="border-bottom mt-3 pb-2">Password</h6>
-            <form id="change-password-form" action="{{ route('user.change-password', [$user->uuid]) }}" method="POST">
+            <form id="change-password-form" action="{{ route('user.change-password', [$user->id]) }}" method="POST">
                 @csrf
 
                 <div class="mb-3">
@@ -69,8 +69,9 @@
         btnSendCode.addEventListener('click', function (e) {
             e.preventDefault();
 
-            axios.post('http://localhost:8080/users/{{ $user->uuid }}/send-password-reset-code', {})
+            axios.post('http://localhost:8080/users/{{ $user->id }}/send-password-reset-code', {})
                 .then(function (response) {
+                    console.log(response.data);
                     // disable button for 60 seconds
                     var btn = document.getElementById('send-code');
                     btn.disabled = true;

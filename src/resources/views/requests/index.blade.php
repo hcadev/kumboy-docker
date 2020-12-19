@@ -15,18 +15,18 @@
                         </div>
                     </form>
                 </div>
-                @if ($storeRequests->isEmpty())
+                @if ($store_requests->isEmpty())
                     <div class="alert alert-danger mt-3">No records found.</div>
                 @else
-                    @if ($storeRequests->isNotEmpty())
-                        @foreach ($storeRequests AS $request)
+                    @if ($store_requests->isNotEmpty())
+                        @foreach ($store_requests AS $request)
                             <p class="mb-1">
                                 <span class="small text-secondary">{{ $request->created_at }} &#8285;</span>
                                 {{ ucfirst(str_replace('_', ' ', $request->type)) }}
                                 &#8231;
-                                <a href="{{ route('user.activity-log', $request->user_uuid) }}">{{ $request->user_name }}</a>
+                                <a href="{{ route('user.store-requests', $request->user_id) }}">{{ $request->user_name }}</a>
                                 &#8231;
-                                <a href="{{ route('user.store-request-details', [$request->user_uuid, $request->code]) }}">{{ $request->code }}</a>
+                                <a href="{{ route('user.store-request-details', [$request->user_id, $request->code]) }}">{{ $request->code }}</a>
                                 &ndash;
                                 <span class="small text-secondary">
                                         {{ ucwords($request->status) }}
@@ -40,12 +40,12 @@
                     @endif
 
                     @include('shared.pagination', [
-                        'itemStart' => $itemStart,
-                        'itemEnd' => $itemEnd,
-                        'totalCount' => $totalCount,
-                        'currentPage' => $currentPage,
-                        'totalPages' => $totalPages,
-                        'itemsPerPage' => $itemsPerPage,
+                        'item_start' => $item_start,
+                        'item_end' => $item_end,
+                        'total_count' => $total_count,
+                        'current_page' => $current_page,
+                        'total_pages' => $total_pages,
+                        'items_per_page' => $items_per_page,
                         'keyword' => $keyword,
                         'url' => route('request.view-all'),
                     ])

@@ -3,8 +3,8 @@
 <div class="row">
     <div class="col">
         <h4 class="border-bottom mb-1 mt-3 pb-2">Store Transfer</h4>
-        @if (session('messageType'))
-            <div class="alert alert-{{ session('messageType') }}">{{ session('messageContent') }}</div>
+        @if (session('message_type'))
+            <div class="alert alert-{{ session('message_type') }}">{{ session('message_content') }}</div>
         @endif
 
         <form id="transfer_store" method="POST" enctype="multipart/form-data">
@@ -60,7 +60,7 @@
                 @enderror
             </div>
 
-            <div class="mb-3 text-right">
+            <div class="mb-3 text-end">
                 <button type="submit" class="btn btn-primary d-none" id="form_submit">Transfer Store</button>
             </div>
         </form>

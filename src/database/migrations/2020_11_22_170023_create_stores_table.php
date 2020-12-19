@@ -16,16 +16,16 @@ class CreateStoresTable extends Migration
     {
         Schema::create('stores', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid');
-            $table->uuid('user_uuid');
+            $table->unsignedBigInteger('user_id');
             $table->string('name')->unique();
             $table->string('contact_number');
             $table->string('address');
             $table->string('map_coordinates');
             $table->string('map_address');
             $table->date('open_until');
+            $table->string('logo')->nullable();
 
-            $table->foreign('user_uuid')->references('uuid')->on('users');
+            $table->foreign('user_id')->references('id')->on('users');
             $table->engine = 'InnoDB';
         });
 

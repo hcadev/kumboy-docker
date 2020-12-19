@@ -10,5 +10,29 @@ class Product extends Model
 {
     use HasFactory, WithoutTimestamps;
 
-    protected $fillable = [];
+    protected $fillable = [
+        'store_id',
+        'name',
+        'qty',
+        'price',
+        'main_category',
+        'sub_category',
+        'sold',
+        'preview',
+    ];
+
+    public function vendor()
+    {
+        return $this->belongsTo(Store::class, 'store_id', 'id');
+    }
+
+    public function specifications()
+    {
+        return $this->hasMany(ProductSpecification::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
 }

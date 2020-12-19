@@ -3,7 +3,7 @@ namespace App\Traits\Validation;
 
 trait HasStoreTransferValidation
 {
-    private $storeTransferRules = [
+    private $store_transfer_rules = [
         'email' => 'required|email|exists:users',
         'attachment' => 'required|file|mimetypes:application/pdf'
     ];
@@ -11,7 +11,7 @@ trait HasStoreTransferValidation
     public function getStoreTransferRules(array $fields = [])
     {
         return empty($fields)
-            ? $this->storeTransferRules
-            : array_intersect_key($this->storeTransferRules, array_flip($fields));
+            ? $this->store_transfer_rules
+            : array_intersect_key($this->store_transfer_rules, array_flip($fields));
     }
 }

@@ -2,10 +2,10 @@
 
 <div class="row">
     <div class="col-12">
-        <h4 class="border-bottom mt-3 pb-2">{{ $formTitle }}</h4>
+        <h4 class="border-bottom mt-3 pb-2">{{ $form_title }}</h4>
 
-        @if (session('messageType'))
-            <div class="alert alert-{{ session('messageType') }}">{{ session('messageContent') }}</div>
+        @if (session('message_type'))
+            <div class="alert alert-{{ session('message_type') }}">{{ session('message_content') }}</div>
         @endif
 
         <form method="POST" enctype="multipart/form-data">
@@ -13,7 +13,7 @@
 
             <div class="mb-3">
                 <label for="name">Name</label>
-                <input type="text" name="name" class="form-control" value="{{ isset($formData['name']) ? $formData['name'] : old('name') }}">
+                <input type="text" name="name" class="form-control" value="{{ isset($form_data['name']) ? $form_data['name'] : old('name') }}">
                 @error('name')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
@@ -21,7 +21,7 @@
 
             <div class="mb-3">
                 <label for="contact_number">Contact Number</label>
-                <input type="text" name="contact_number" class="form-control" value="{{ isset($formData['contact_number']) ? $formData['contact_number'] : old('contact_number') }}">
+                <input type="text" name="contact_number" class="form-control" value="{{ isset($form_data['contact_number']) ? $form_data['contact_number'] : old('contact_number') }}">
                 <div class="form-text">Number Format: 09xx-xxx-xxxx or 074-xxx-xxxx</div>
                 @error('contact_number')
                     <div class="text-danger">{{ $message }}</div>
@@ -30,7 +30,7 @@
 
             <div class="mb-3">
                 <label for="address">Address</label>
-                <input type="text" name="address" class="form-control" value="{{ isset($formData['address']) ? $formData['address'] : old('address') }}">
+                <input type="text" name="address" class="form-control" value="{{ isset($form_data['address']) ? $form_data['address'] : old('address') }}">
                 <div class="form-text">House No. / Building No. / Street Address</div>
                 @error('address')
                     <div class="text-danger">{{ $message }}</div>
@@ -47,7 +47,7 @@
 
             <div class="mb-3">
                 <label for="map_address">Map Address</label>
-                <input type="text" name="map_address" readonly class="form-control" value="{{ isset($formData['map_address']) ? $formData['map_address'] : old('map_address') }}">
+                <input type="text" name="map_address" readonly class="form-control" value="{{ isset($form_data['map_address']) ? $form_data['map_address'] : old('map_address') }}">
                 @error('map_address')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
@@ -55,7 +55,7 @@
 
             <div class="mb-3">
                 <label for="map_address">Map Coordinates</label>
-                <input type="text" name="map_coordinates" readonly class="form-control" value="{{ isset($formData['map_coordinates']) ? $formData['map_coordinates'] : old('map_coordinates') }}">
+                <input type="text" name="map_coordinates" readonly class="form-control" value="{{ isset($form_data['map_coordinates']) ? $form_data['map_coordinates'] : old('map_coordinates') }}">
                 @error('map_coordinates')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
@@ -74,7 +74,7 @@
 
             <div class="mb-3">
                 <label for="open_until">Open until</label>
-                <input type="date" name="open_until" class="form-control" value="{{ isset($formData['open_until']) ? date('Y-m-d', strtotime($formData['open_until'])) : old('open_until') }}">
+                <input type="date" name="open_until" class="form-control" value="{{ isset($form_data['open_until']) ? date('Y-m-d', strtotime($form_data['open_until'])) : old('open_until') }}">
                 <div class="form-text">
                     Select a date for when the store closes.
                 </div>
@@ -98,7 +98,7 @@
     var lat;
     var lng;
 
-    var oldLatLng = "{{ isset($formData['map_coordinates']) ? $formData['map_coordinates'] : old('map_coordinates') }}";
+    var oldLatLng = "{{ isset($form_data['map_coordinates']) ? $form_data['map_coordinates'] : old('map_coordinates') }}";
 
     if (oldLatLng) {
         oldLatLng = oldLatLng.split(',');

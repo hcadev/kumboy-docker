@@ -29,20 +29,16 @@ class NotifyStoreRequestApprove
     public function handle(StoreRequestApprove $event)
     {
         Notification::send(
-            User::query()
-                ->where('uuid', $event->storeRequest->user_uuid)
-                ->first(),
-            new \App\Notifications\StoreRequestApprove($event->storeRequest)
+            User::query()->find($event->store_request->user_id),
+            new \App\Notifications\StoreRequestApprove($event->store_request)
         );
 
-        if ($event->storeRequest->type === 'store transfer') {
-            $storeTransfer = $event->storeRequest->storeTransfer()->first();
+        if ($event->store_request->type === 'store transfer') {
+            $store_transfer = $event->store_request->storeTransfer()->first();
 
             Notification::send(
-                User::query()
-                    ->where('uuid', $storeTransfer->target_uuid)
-                    ->first(),
-                new \App\Notifications\StoreTransferred($storeTransfer)
+                User::query()->find($store_transfer->target_id),
+                new \App\Notifications\StoreTransferred($store_transfer)
             );
         }
     }

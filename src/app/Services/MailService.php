@@ -19,7 +19,7 @@ class MailService
         }
     }
 
-    public function sendPasswordResetVerificationCode($email, $code)
+    public function sendPasswordResetCode($email, $code)
     {
         try {
             Mail::to($email)->queue(new PasswordResetVerificationCode($code));

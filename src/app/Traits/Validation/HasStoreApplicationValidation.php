@@ -3,7 +3,7 @@ namespace App\Traits\Validation;
 
 trait HasStoreApplicationValidation
 {
-    private $storeApplicationRules = [
+    private $store_application_rules = [
         'name' => 'required|store_application',
         'contact_number' => 'required|contact_number',
         'address' => 'required',
@@ -16,7 +16,7 @@ trait HasStoreApplicationValidation
     public function getStoreApplicationRules(array $fields = [])
     {
         return empty($fields)
-            ? $this->storeApplicationRules
-            : array_intersect_key($this->storeApplicationRules, array_flip($fields));
+            ? $this->store_application_rules
+            : array_intersect_key($this->store_application_rules, array_flip($fields));
     }
 }

@@ -10,43 +10,43 @@ class StoreRequestPolicy
 {
     use HandlesAuthorization;
 
-    public function viewAllRequests(User $user, StoreRequest $storeRequest)
+    public function viewAllRequests(User $user, StoreRequest $store_request)
     {
         return in_array(strtolower($user->role), ['superadmin', 'admin']);
     }
 
-    public function viewStoreRequests(User $user, StoreRequest $storeRequest, $user_uuid)
+    public function viewStoreRequests(User $user, StoreRequest $store_request, int $user_id)
     {
-        return $user->uuid === $user_uuid OR in_array(strtolower($user->role), ['superadmin', 'admin']);
+        return $user->id === $user_id OR in_array(strtolower($user->role), ['superadmin', 'admin']);
     }
 
-    public function viewRequestDetails(User $user, StoreRequest $storeRequest)
+    public function viewRequestDetails(User $user, StoreRequest $store_request)
     {
-        return $user->uuid === $storeRequest->user_uuid OR in_array(strtolower($user->role), ['superadmin', 'admin']);
+        return $user->id === $store_request->user_id OR in_array(strtolower($user->role), ['superadmin', 'admin']);
     }
 
-    public function cancelRequest(User $user, StoreRequest $storeRequest)
+    public function cancelRequest(User $user, StoreRequest $store_request)
     {
-        return $user->uuid === $storeRequest->user_uuid;
+        return $user->id === $store_request->user_id;
     }
 
-    public function approveRequest(User $user, StoreRequest $storeRequest)
+    public function approveRequest(User $user, StoreRequest $store_request)
     {
         return in_array(strtolower($user->role), ['superadmin', 'admin']);
     }
 
-    public function rejectRequest(User $user, StoreRequest $storeRequest)
+    public function rejectRequest(User $user, StoreRequest $store_request)
     {
         return in_array(strtolower($user->role), ['superadmin', 'admin']);
     }
 
-    public function countPendingRequests(User $user, StoreRequest $storeRequest)
+    public function countPendingRequests(User $user, StoreRequest $store_request)
     {
         return in_array(strtolower($user->role), ['superadmin', 'admin']);
     }
 
-    public function addStoreApplication(User $user, StoreRequest $storeRequest, $user_uuid)
+    public function addStoreApplication(User $user, StoreRequest $store_request, int $user_id)
     {
-        return $user->uuid === $user_uuid;
+        return $user->id === $user_id;
     }
 }

@@ -6,15 +6,15 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends ProfileController
 {
-    public function searchNotification($userUuid, Request $request)
+    public function searchNotification($user_id, Request $request)
     {
         return redirect()
-            ->route('user.notifications', [$userUuid, 1, 15, $request->get('keyword')]);
+            ->route('user.notifications', [$user_id, 1, 15, $request->get('keyword')]);
     }
 
-    public function viewAll($userUuid, $currentPage = 1, $itemsPerPage = 15, $keyword = null)
+    public function viewAll($user_id, $current_page = 1, $items_per_page = 15, $keyword = null)
     {
-        if (Auth::user()->uuid !== $this->user->uuid) {
+        if (Auth::user()->id !== $this->user->id) {
             abort(403);
         }
 
@@ -24,11 +24,11 @@ class NotificationController extends ProfileController
             $userNotifications->whereRaw('MATCH (data) AGAINST (? IN BOOLEAN MODE)', [$keyword.'*']);
         }
 
-        $offset = ($currentPage - 1) * $itemsPerPage;
-        $totalCount = $userNotifications->count();
+        $offset = ($current_page - 1) * $items_per_page;
+        $total_count = $userNotifications->count();
 
         $notifications = $userNotifications->skip($offset)
-            ->take($itemsPerPage)
+            ->take($items_per_page)
             ->get();
 
         return $this->profile
@@ -36,23 +36,23 @@ class NotificationController extends ProfileController
             ->with('contentData', [
                 'user' => $this->user,
                 'notifications' => $notifications,
-                'itemStart' => $offset + 1,
-                'itemEnd' => $notifications->count() + $offset,
-                'totalCount' => $totalCount,
-                'currentPage' => $currentPage,
-                'totalPages' => ceil($totalCount / $itemsPerPage),
-                'itemsPerPage' => $itemsPerPage,
+                'item_start' => $offset + 1,
+                'item_end' => $notifications->count() + $offset,
+                'total_count' => $total_count,
+                'current_page' => $current_page,
+                'total_pages' => ceil($total_count / $items_per_page),
+                'items_per_page' => $items_per_page,
                 'keyword' => $keyword,
             ]);
     }
 
-    public function readNotification($userUuid, $notifId)
+    public function readNotification($user_id, $notif_id)
     {
-        if (Auth::user()->uuid !== $this->user->uuid) {
+        if (Auth::user()->id !== $this->user->id) {
             abort(403);
         }
 
-        $notification = Auth::user()->unreadNotifications()->find($notifId);
+        $notification = Auth::user()->unreadNotifications()->find($notif_id);
 
         if ($notification === null) {
             abort(404);
@@ -67,13 +67,13 @@ class NotificationController extends ProfileController
                 case 'store_request':
                     $redirect = redirect()
                         ->route('user.store-request-details', [
-                            $notification->data['user_uuid'],
+                            $notification->data['user_id'],
                             $notification->data['code']
                         ]);
                     break;
                 case 'store_received':
                     $redirect = redirect()
-                        ->route('store.products', $notification->data['store_uuid']);
+                        ->route('store.products', $notification->data['store_id']);
                     break;
             }
 
@@ -84,18 +84,18 @@ class NotificationController extends ProfileController
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 
-    public function viewNotification($userUuid, $notifId)
+    public function viewNotification($user_id, $notif_id)
     {
-        if (Auth::user()->uuid !== $this->user->uuid) {
+        if (Auth::user()->id !== $this->user->id) {
             abort(403);
         }
 
-        $notification = Auth::user()->notifications()->find($notifId);
+        $notification = Auth::user()->notifications()->find($notif_id);
 
         if ($notification === null) {
             abort(404);
@@ -105,7 +105,7 @@ class NotificationController extends ProfileController
             case 'store_request':
                 $redirect = redirect()
                     ->route('user.store-request-details', [
-                        $notification->data['user_uuid'],
+                        $notification->data['user_id'],
                         $notification->data['code']
                     ]);
                 break;

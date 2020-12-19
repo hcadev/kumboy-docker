@@ -4,11 +4,14 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center border-bottom mt-3 mb-1w pb-2">
             <h4 class="my-0">Requests</h4>
-            <form action="{{ route('user.search-store-request', $user->uuid) }}" METHOD="POST">
+            <form action="{{ route('user.search-store-request', $user->id) }}" METHOD="POST">
                 @csrf
                 <div class="input-group">
                     <input type="search" name="keyword" class="form-control form-control-sm" placeholder="Search keyword...">
-                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                    <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center">
+                        <i class="material-icons d-md-none">search</i>
+                        <span class="d-none d-sm-inline">Search</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -22,7 +25,7 @@
                     &#8231;
                     {{ ucwords(str_replace('_', ' ', $request->type)) }}
                     &#8231;
-                    <a href="{{ route('user.store-request-details', [$request->user_uuid, $request->code]) }}">{{ $request->code }}</a>
+                    <a href="{{ route('user.store-request-details', [$request->user_id, $request->code]) }}">{{ $request->code }}</a>
                     &#8231;
                     <span class="small">
                         {{ ucwords($request->status) }}
@@ -36,13 +39,13 @@
             @endforeach
 
             @include('shared.pagination', [
-                'itemStart' => $itemStart,
-                'itemEnd' => $itemEnd,
-                'totalCount' => $totalCount,
-                'currentPage' => $currentPage,
-                'totalPages' => $totalPages,
-                'itemsPerPage' => $itemsPerPage,
-                'url' => route('user.store-requests', $request['user_uuid']),
+                'item_start' => $item_start,
+                'item_end' => $item_end,
+                'total_count' => $total_count,
+                'current_page' => $current_page,
+                'total_pages' => $total_pages,
+                'items_per_page' => $items_per_page,
+                'url' => route('user.store-requests', $request['user_id']),
             ])
         @endif
     </div>

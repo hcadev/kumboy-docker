@@ -29,7 +29,7 @@ class LogUserChangeName
     {
         UserActivity::query()
             ->create([
-                'user_uuid' => $event->user->uuid,
+                'user_id' => $event->user->id,
                 'date_recorded' => now(),
                 'action_taken' => 'Changed name from '.$event->oldName.' to '.$event->user->name.'.',
             ]);

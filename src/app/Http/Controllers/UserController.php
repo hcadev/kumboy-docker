@@ -18,8 +18,8 @@ class UserController extends DatabaseController
 
     public function sendEmailVerificationCode(
         Request $request,
-        VerificationService $verificationService,
-        MailService $mailService
+        VerificationService $verification_service,
+        MailService $mail_service
     ) {
         if ($request->wantsJson()) {
             $validator = Validator::make($request->all(), $this->getUserRules(['email']));
@@ -31,14 +31,14 @@ class UserController extends DatabaseController
             try {
                 $this->beginTransaction();
 
-                $code = $verificationService->generateVerificationCode($validator->validated()['email']);
+                $code = $verification_service->generateCode($validator->validated()['email']);
 
                 if ($code === null) {
                     $this->rollback();
                     return response()->json('Unable to generate verification code.', 500);
                 }
 
-                $mailService->sendEmailVerificationCode($validator->validated()['email'], $code);
+                $mail_service->sendEmailVerificationCode($validator->validated()['email'], $code);
 
                 $this->commit();
 
@@ -51,77 +51,39 @@ class UserController extends DatabaseController
         }
     }
 
-    public function showRegistrationForm()
-    {
-        return view('users.registration_form');
-    }
+    public function sendPasswordResetCode(
+        Request $request,
+        VerificationService $verification_service,
+        MailService $mail_service
+    ) {
+        if ($request->wantsJson()) {
+            $validator = Validator::make($request->all(), ['email' => 'required|email|exists:users']);
 
-    public function register(Request $request, VerificationService $verificationService)
-    {
-        $validatedData = $request->validate($this->getUserRules());
+            if ($validator->fails()) {
+                return response()->json($validator->errors()->get('email'), 400);
+            }
 
-        try {
-            $this->beginTransaction();
+            try {
+                $this->beginTransaction();
 
-            $verificationService->consumeVerificationCode($validatedData['email'], $validatedData['verification_code']);
+                $code = $verification_service->generateCode($validator->validated()['email']);
 
-            User::query()
-                ->create([
-                    'uuid' => (string) Str::orderedUuid(),
-                    'name' => $validatedData['name'],
-                    'email' => $validatedData['email'],
-                    'email_verified_at' => now(),
-                    'password' => Hash::make($validatedData['password']),
-                    'role' => 'user',
-                ]);
+                if ($code === null) {
+                    $this->rollback();
+                    return response()->json('Unable to generate verification code.', 500);
+                }
 
-            $this->commit();
+                $mail_service->sendPasswordResetCode($validator->validated()['email'], $code);
 
-            return back()
-                ->with('messageType', 'success')
-                ->with('messageContent', 'You have successfully registered. You may now login.');
-        } catch (\Exception $e) {
-            $this->rollback();
-            logger($e);
-            return back()
-                ->with('messageType', 'success')
-                ->with('messageContent', 'Server error.');
+                $this->commit();
+
+                return response()->json('Verification code has been sent.');
+            } catch (\Exception $e) {
+                $this->rollback();
+                logger($e);
+                return response()->json('Server error.', 500);
+            }
         }
-    }
-
-    public function search(Request $request)
-    {
-        return redirect()
-            ->route('user.view-all', [1, 25, $request->get('keyword')]);
-    }
-
-    public function viewAll($currentPage = 1, $itemsPerPage = 15, $keyword = null)
-    {
-        $this->authorize('viewAll', new User());
-
-        $users = User::query();
-
-        if (empty($keyword) === false) {
-            $users->whereRaw('MATCH (uuid, name, email) AGAINST(? IN BOOLEAN MODE)', [$keyword.'*']);
-        }
-
-        $offset = ($currentPage - 1) * $itemsPerPage;
-        $totalCount = $users->count();
-
-        $list = $users->skip($offset)
-            ->take($itemsPerPage)
-            ->orderBy('name')
-            ->get();
-
-        return view('users.index')
-            ->with('users', $list)
-            ->with('itemStart', $offset + 1)
-            ->with('itemEnd', $list->count() + $offset)
-            ->with('totalCount', $totalCount)
-            ->with('currentPage', $currentPage)
-            ->with('totalPages', ceil($totalCount / $itemsPerPage))
-            ->with('itemsPerPage', $itemsPerPage)
-            ->with('keyword', $keyword);
     }
 
     public function findByEmail(Request $request)
@@ -134,11 +96,113 @@ class UserController extends DatabaseController
 
             if ($user === null) {
                 return response()->json('User not found.', 404);
-            } elseif ($user->uuid === Auth::user()->uuid) {
+            } elseif ($user->id === Auth::user()->id) {
                 return response()->json('Pick a user other than yourself.', 400);
             } else {
                 return response()->json($user);
             }
         }
+    }
+
+    public function showRegistrationForm()
+    {
+        return view('users.registration_form');
+    }
+
+    public function register(Request $request, VerificationService $verification_service)
+    {
+        $validated_data = $request->validate($this->getUserRules());
+
+        try {
+            $this->beginTransaction();
+
+            $verification_service->consumeVerificationCode($validated_data['email'], $validated_data['verification_code']);
+
+            User::query()
+                ->create([
+                    'name' => $validated_data['name'],
+                    'email' => $validated_data['email'],
+                    'email_verified_at' => now(),
+                    'password' => Hash::make($validated_data['password']),
+                    'role' => 'user',
+                ]);
+
+            $this->commit();
+
+            return back()
+                ->with('message_type', 'success')
+                ->with('message_content', 'You have successfully registered. You may now login.');
+        } catch (\Exception $e) {
+            $this->rollback();
+            logger($e);
+            return back()
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
+        }
+    }
+
+    public function showPasswordResetForm()
+    {
+        return view('users.forgot_password');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validatedData = $request->validate(array_merge(
+            ['email' => 'required|email|exists:users'],
+            $this->getUserRules(['verification_code', 'password', 'password_confirmation'])
+        ));
+
+        try {
+            $user = User::query()
+                ->where('email', $validatedData['email'])
+                ->first();
+
+            $user->update(['password' => Hash::make($validatedData['password'])]);
+
+            return back()
+                ->with('message_type', 'success')
+                ->with('message_content', 'Password has been changed.');
+        } catch (\Exception $e) {
+            logger($e);
+            return back()
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
+        }
+    }
+
+    public function search(Request $request)
+    {
+        return redirect()
+            ->route('user.view-all', [1, 25, $request->get('keyword')]);
+    }
+
+    public function viewAll($current_page = 1, $items_per_page = 15, $keyword = null)
+    {
+        $this->authorize('viewAll', new User());
+
+        $users = User::query();
+
+        if (empty($keyword) === false) {
+            $users->whereRaw('MATCH (id, name, email) AGAINST(? IN BOOLEAN MODE)', [$keyword.'*']);
+        }
+
+        $offset = ($current_page - 1) * $items_per_page;
+        $total_count = $users->count();
+
+        $list = $users->skip($offset)
+            ->take($items_per_page)
+            ->orderBy('name')
+            ->get();
+
+        return view('users.index')
+            ->with('users', $list)
+            ->with('item_start', $offset + 1)
+            ->with('item_end', $list->count() + $offset)
+            ->with('total_count', $total_count)
+            ->with('current_page', $current_page)
+            ->with('total_pages', ceil($total_count / $items_per_page))
+            ->with('items_per_page', $items_per_page)
+            ->with('keyword', $keyword);
     }
 }

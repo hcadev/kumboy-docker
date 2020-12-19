@@ -30,9 +30,9 @@ class NotifyStoreRequestReject
     {
         Notification::send(
             User::query()
-                ->where('uuid', $event->storeRequest->user_uuid)
+                ->where('id', $event->store_request->user_id)
                 ->first(),
-            new \App\Notifications\StoreRequestReject($event->storeRequest)
+            new \App\Notifications\StoreRequestReject($event->store_request)
         );
     }
 }

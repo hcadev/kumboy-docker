@@ -13,7 +13,7 @@ class UserAddressBook extends Model
     protected $table = 'user_address_book';
 
     protected $fillable = [
-        'user_uuid',
+        'user_id',
         'contact_person',
         'contact_number',
         'label',

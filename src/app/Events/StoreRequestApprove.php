@@ -15,17 +15,17 @@ class StoreRequestApprove
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $storeRequest;
+    public $store_request;
 
     /**
      * Create a new event instance.
      *
-     * @param StoreRequest $storeRequest
+     * @param StoreRequest $store_request
      * @return void
      */
-    public function __construct(StoreRequest $storeRequest)
+    public function __construct(StoreRequest $store_request)
     {
-        $this->storeRequest = $storeRequest;
+        $this->store_request = $store_request;
     }
 
     /**

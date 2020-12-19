@@ -6,7 +6,7 @@ use Illuminate\Database\QueryException;
 
 class VerificationService
 {
-    public function generateVerificationCode($email)
+    public function generateCode($email)
     {
         try {
             $verificationCode = [

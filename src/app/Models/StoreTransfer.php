@@ -14,8 +14,8 @@ class StoreTransfer extends Model
 
     protected $fillable = [
         'request_code',
-        'uuid',
-        'target_uuid',
+        'store_id',
+        'target_id',
         'attachment',
     ];
 

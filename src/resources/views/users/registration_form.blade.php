@@ -4,14 +4,15 @@
 @section('content')
     <div class="container">
         <div class="row">
-            <div class="col-md-6 offset-md-3">
-                <div class="card mt-5">
-                    <div class="card-title">
-                        <h4 class="text-center py-3">Registration</h4>
+            <div class="col-md-4 offset-md-4">
+                <div class="card mt-2 mt-md-5">
+                    <div class="card-title py-3 mb-0">
+                        <h4 class="text-center">Registration</h4>
                     </div>
+                    <hr class="my-0">
                     <div class="card-body">
-                        @if (session('messageContent'))
-                            <div class="alert alert-{{ session('messageType') }}">{{ session('messageContent') }}</div>
+                        @if (session('message_content'))
+                            <div class="alert alert-{{ session('message_type') }}">{{ session('message_content') }}</div>
                         @endif
 
                         <form method="POST">
@@ -59,8 +60,16 @@
                                 @enderror
                             </div>
 
-                            <button type="submit" class="btn btn-primary">Register</button>
+                            <div class="d-grid d-block">
+                                <button type="submit" class="btn btn-primary">Register</button>
+                            </div>
                         </form>
+
+                        <hr>
+
+                        <div class="text-center">
+                            <a href="{{ route('login') }}">Return to Login</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -71,30 +80,29 @@
         document.getElementById('send-code').addEventListener('click', function (e) {
             e.preventDefault();
 
-            // disable button for 60 seconds
-            var btn = document.getElementById('send-code');
-            btn.disabled = true;
-
-            var ctr = 60;
-            timer();
-
-            function timer() {
-                setTimeout(function () {
-                    if (ctr === 1) {
-                        btn.disabled = false;
-                        btn.innerHTML = 'Send Code';
-                    } else if (ctr > 1) {
-                        ctr--;
-                        btn.innerHTML = 'Resend in ' + ctr;
-                        timer();
-                    }
-                }, 1000);
-            }
-
             axios.post('http://localhost:8080/users/send-email-verification-code', {
                     email: document.getElementById('email').value
                 })
                 .then(function (response) {
+                    // disable button for 60 seconds
+                    var btn = document.getElementById('send-code');
+                    btn.disabled = true;
+
+                    var ctr = 60;
+                    timer();
+
+                    function timer() {
+                        setTimeout(function () {
+                            if (ctr === 1) {
+                                btn.disabled = false;
+                                btn.innerHTML = 'Send Code';
+                            } else if (ctr > 1) {
+                                ctr--;
+                                btn.innerHTML = 'Resend in ' + ctr;
+                                timer();
+                            }
+                        }, 1000);
+                    }
                 })
                 .catch(function (error) {
                     if (error.response.status === 400) {

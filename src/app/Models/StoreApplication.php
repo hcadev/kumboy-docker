@@ -14,7 +14,7 @@ class StoreApplication extends Model
 
     protected $fillable = [
         'request_code',
-        'uuid',
+        'store_id',
         'name',
         'contact_number',
         'address',

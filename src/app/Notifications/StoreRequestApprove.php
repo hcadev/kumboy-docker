@@ -12,17 +12,17 @@ class StoreRequestApprove extends Notification
 {
     use Queueable;
 
-    public $storeRequest;
+    public $store_request;
 
     /**
      * Create a new notification instance.
      *
-     * @param StoreRequest $storeRequest
+     * @param StoreRequest $store_request
      * @return void
      */
-    public function __construct(StoreRequest $storeRequest)
+    public function __construct(StoreRequest $store_request)
     {
-        $this->storeRequest = $storeRequest;
+        $this->store_request = $store_request;
     }
 
     /**
@@ -45,8 +45,8 @@ class StoreRequestApprove extends Notification
     public function toArray($notifiable)
     {
         return [
-            'user_uuid' => $this->storeRequest->user_uuid,
-            'code' => $this->storeRequest->code,
+            'user_id' => $this->store_request->user_id,
+            'code' => $this->store_request->code,
             'type' => 'store_request',
             'message' => 'Your request has been approved.',
         ];

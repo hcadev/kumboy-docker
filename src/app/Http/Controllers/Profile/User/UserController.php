@@ -16,7 +16,7 @@ class UserController extends ProfileController
 {
     use HasUserValidation;
 
-    public function showAccountSettings($uuid)
+    public function showAccountSettings($id)
     {
         $this->authorize('viewAccountSettings', $this->user);
 
@@ -25,17 +25,17 @@ class UserController extends ProfileController
             ->with('contentData', ['user' => $this->user]);
     }
 
-    public function changeName($uuid, Request $request)
+    public function changeName($id, Request $request)
     {
         $this->authorize('changeName', $this->user);
 
-        $validatedData = $request->validate($this->getUserRules(['name']));
+        $validated_data = $request->validate($this->getUserRules(['name']));
 
         try {
             $this->beginTransaction();
 
             $oldName = $this->user->name;
-            $this->user->update(['name' => $validatedData['name']]);
+            $this->user->update(['name' => $validated_data['name']]);
 
             if ($this->user->wasChanged()) {
                 event(new UserChangeName($this->user, $oldName));
@@ -44,8 +44,8 @@ class UserController extends ProfileController
             $this->commit();
 
             return back()
-                ->with('messageType', 'success')
-                ->with('messageContent', $this->user->wasChanged()
+                ->with('message_type', 'success')
+                ->with('message_content', $this->user->wasChanged()
                     ? 'Name has been changed.'
                     : 'No changes were made.'
                 );
@@ -53,16 +53,16 @@ class UserController extends ProfileController
             $this->beginTransaction();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 
     public function sendPasswordResetCode(
-        $uuid,
+        $id,
         Request $request,
-        VerificationService $verificationService,
-        MailService $mailService
+        VerificationService $verification_service,
+        MailService $mail_service
     ) {
         if ($request->wantsJson()) {
             $gate = Gate::inspect('changePassword', $this->user);
@@ -71,13 +71,13 @@ class UserController extends ProfileController
                 try {
                     $this->beginTransaction();
 
-                    $verificationCode = $verificationService->generateVerificationCode($this->user->email);
+                    $verificationCode = $verification_service->generateCode($this->user->email);
 
                     if ($verificationCode === null) {
                         return response()->json('Unable to generate verification code.', 500);
                     }
 
-                    if ($mailService->sendPasswordResetVerificationCode($this->user->email, $verificationCode)) {
+                    if ($mail_service->sendPasswordResetCode($this->user->email, $verificationCode)) {
                         $this->commit();
                         return response()->json('Verification code has been sent.');
                     } else {
@@ -94,13 +94,13 @@ class UserController extends ProfileController
         }
     }
 
-    public function changePassword($uuid, Request $request, VerificationService $verificationService)
+    public function changePassword($id, Request $request, VerificationService $verification_service)
     {
         $this->authorize('changePassword', $this->user);
 
         // inject user email to request for verification code validation to work
         $request->merge(['email' => $this->user->email]);
-        $validatedData = $request->validate($this->getUserRules([
+        $validated_data = $request->validate($this->getUserRules([
             'password',
             'password_confirmation',
             'verification_code',
@@ -109,27 +109,27 @@ class UserController extends ProfileController
         try {
             $this->beginTransaction();
 
-            if ($verificationService->consumeVerificationCode($this->user->email, $validatedData['verification_code'])) {
-                $this->user->update(['password' => Hash::make($validatedData['password'])]);
+            if ($verification_service->consumeVerificationCode($this->user->email, $validated_data['verification_code'])) {
+                $this->user->update(['password' => Hash::make($validated_data['password'])]);
                 event(new UserChangePassword($this->user));
                 $this->commit();
 
                 return back()
-                    ->with('messageType', 'success')
-                    ->with('messageContent', 'Password has been changed.');
+                    ->with('message_type', 'success')
+                    ->with('message_content', 'Password has been changed.');
             } else {
                 $this->rollback();
 
                 return back()
-                    ->with('messageType', 'danger')
-                    ->with('messageContent', 'Unable to use verification code.');
+                    ->with('message_type', 'danger')
+                    ->with('message_content', 'Unable to use verification code.');
             }
         } catch (\Exception $e) {
             $this->rollback();
             logger($e);
             return back()
-                ->with('messageType', 'danger')
-                ->with('messageContent', 'Server error.');
+                ->with('message_type', 'danger')
+                ->with('message_content', 'Server error.');
         }
     }
 }
